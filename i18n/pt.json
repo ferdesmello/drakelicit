@@ -1,0 +1,50 @@
+{
+	"Rs_param":"Taxa de formação estelar em nossa galáxia",
+	"Rs_question":"Qual é a taxa média de formação de estrelas adequadas (estrelas/ano) em nossa galáxia?",
+	"Rs_axis":"Escala logarítmica · de 0,01 a 1000",
+
+	"fp_param":"Fração de estrelas com planetas",
+	"fp_question":"Qual fração das estrelas forma planetas?",
+	"fp_axis":"Escala logarítmica · de 0,01 a 1",
+
+	"ne_param":"número de planetas habitáveis ​​por estrela",
+	"ne_question":"Qual é o número médio de planetas habitáveis ​​por estrela?",
+	"ne_axis":"Escala logarítmica · de 10^-8 a 100",
+
+	"fl_param":"fração de planetas habitáveis ​​com vida",
+	"fl_question":"Em qual fração de planetas habitáveis ​​surge alguma forma de vida?",
+	"fl_axis":"Escala logarítmica · de 10^-31 a 1",
+
+	"fi_param":"fração de planetas habitáveis ​​com vida que desenvolvem inteligência",
+	"fi_question":"Em qual fração de planetas habitáveis ​​com vida a inteligência evolui?",
+	"fi_axis":"Escala logarítmica · de 10^-20 a 1",
+
+	"fc_param":"fração capaz de comunicação interestelar",
+	"fc_question":"Qual fração de planetas com vida inteligente é capaz de comunicação interestelar?",
+	"fc_axis":"Escala logarítmica · de 10^-8 a 1",
+
+	"L_param":"tempo de vida de civilizações detectáveis",
+	"L_question":"Por quantos anos uma civilização permanece detectável?",
+	"L_axis":"Escala logarítmica · de 10 a 10B",
+
+    "progress_label":"Equação de Drake · levantamento astrobiológico",
+    "param_name":"fração de estrelas com planetas",
+    "question_text":"Que fração das estrelas tem ao menos um planeta?",
+    "axis_note":"Escala logarítmica · de 0,001 a 1",
+    "slider_hint":"O pico é o valor mais provável. As alças laterais definem sua incerteza em cada lado.",
+    "pct10":"Percentil 10",
+    "mode_label":"Moda (pico)",
+    "pct90":"Percentil 90",
+    "skip_btn":"Pular. Não tenho conhecimento suficiente para estimar este parâmetro.",
+    "skip_warning_title":"Pular esta pergunta impede o cálculo do seu N.",
+    "skip_warning_body":" Todos os 10 parâmetros são necessários para calcular o número estimado de civilizações detectáveis. Você pode continuar, mas sua distribuição pessoal de N não será exibida ao final.",
+    "skip_confirm":"Pular mesmo assim", 
+	"skip_cancel":"Voltar",
+    "skipped_badge":"Esta pergunta está pulada — sua distribuição de N não será calculada.",
+    "undo":"Desfazer", 
+	"prev":"Anterior", 
+	"next":"Próxima", 
+	"saved":"● Rascunho salvo", 
+	"median":"Mediana",
+    "interaction_warning":"Mova o slider ao menos um pouco ou pule esta pergunta."
+  }

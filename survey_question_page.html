@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Drake Survey — Pergunta 3</title>
+	<style>
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0
+		}
+
+		body {
+			font-family: system-ui, -apple-system, sans-serif;
+			background: #f5f4f0;
+			color: #1a1a18;
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			padding: 2rem 1.25rem;
+		}
+
+		#wrap {
+			width: 100%;
+			max-width: 600px
+		}
+
+		/* progress */
+		.progress-area {
+			margin-bottom: 2rem
+		}
+
+		.progress-top {
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+			margin-bottom: 6px
+		}
+
+		.progress-label {
+			font-size: 12px;
+			color: #888780;
+			letter-spacing: .04em
+		}
+
+		.progress-count {
+			font-size: 12px;
+			color: #888780
+		}
+
+		.progress-bar {
+			height: 3px;
+			background: #d3d1c7;
+			border-radius: 2px;
+			overflow: hidden
+		}
+
+		.progress-fill {
+			height: 100%;
+			width: 30%;
+			background: #5f5e5a;
+			border-radius: 2px
+		}
+
+		/* param chip + question */
+		.param-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 11px;
+			font-family: monospace;
+			padding: 3px 10px;
+			border: 0.5px solid #b4b2a9;
+			border-radius: 6px;
+			color: #5f5e5a;
+			margin-bottom: .8rem;
+		}
+
+		.question-title {
+			font-size: 20px;
+			font-weight: 500;
+			line-height: 1.3;
+			margin-bottom: .35rem
+		}
+
+		.axis-note {
+			font-size: 12px;
+			color: #888780;
+			margin-bottom: 1.5rem
+		}
+
+		/* slider card */
+		.slider-card {
+			background: #fff;
+			border: 0.5px solid #d3d1c7;
+			border-radius: 12px;
+			padding: 1.1rem 1.1rem .9rem;
+			margin-bottom: .9rem;
+			transition: opacity .2s;
+		}
+
+		.slider-card.dimmed {
+			opacity: .32;
+			pointer-events: none
+		}
+
+		.slider-hint {
+			font-size: 13px;
+			color: #888780;
+			margin-bottom: .9rem
+		}
+
+		#canvas-wrap {
+			position: relative;
+			width: 100%;
+			height: 185px
+		}
+
+		#cv {
+			width: 100%;
+			height: 185px;
+			display: block
+		}
+
+		#track-area {
+			position: relative;
+			height: 50px;
+			touch-action: none;
+			user-select: none
+		}
+
+		#track-line {
+			position: absolute;
+			top: 50%;
+			left: 6px;
+			right: 6px;
+			height: 3px;
+			background: #b4b2a9;
+			transform: translateY(-50%);
+			border-radius: 2px;
+		}
+
+		#track-fill {
+			position: absolute;
+			top: 0;
+			height: 100%;
+			background: #5f5e5a;
+			opacity: .25;
+			border-radius: 2px
+		}
+
+		.hdl {
+			position: absolute;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			background: #fff;
+			border: 2px solid #5f5e5a;
+			cursor: grab;
+			touch-action: none;
+			z-index: 3;
+			transition: border-color .12s, box-shadow .12s;
+		}
+
+		.hdl:hover,
+		.hdl.drag {
+			border-color: #378add;
+			box-shadow: 0 0 0 6px rgba(55, 138, 221, .13)
+		}
+
+		#h-mode {
+			width: 22px;
+			height: 22px;
+			border-radius: 4px;
+			background: #1a1a18;
+			border: none;
+			cursor: grab;
+			z-index: 4;
+		}
+
+		#h-mode:hover,
+		#h-mode.drag {
+			background: #378add;
+			box-shadow: 0 0 0 6px rgba(55, 138, 221, .13)
+		}
+
+		/* inputs */
+		.inputs-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 8px;
+			margin-bottom: .65rem
+		}
+
+		.inp-box {
+			background: #f1efe8;
+			border-radius: 6px;
+			padding: 6px 9px
+		}
+
+		.inp-box label {
+			display: block;
+			font-size: 10px;
+			color: #888780;
+			text-transform: uppercase;
+			letter-spacing: .05em;
+			margin-bottom: 2px
+		}
+
+		.inp-box input {
+			width: 100%;
+			font-size: 14px;
+			font-family: monospace;
+			background: transparent;
+			border: none;
+			color: #1a1a18;
+			outline: none;
+			padding: 0;
+		}
+
+		.inp-box input:focus {
+			color: #185fa5
+		}
+
+		.derived-row {
+			display: flex;
+			gap: 1rem;
+			font-size: 12px;
+			color: #888780;
+			flex-wrap: wrap;
+			padding-top: 1px
+		}
+
+		.derived-row span b {
+			font-weight: 500;
+			color: #5f5e5a
+		}
+
+		/* skip */
+		.skip-area {
+			margin-bottom: 1.6rem
+		}
+
+		.skip-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			font-size: 12px;
+			color: #888780;
+			background: transparent;
+			border: 0.5px solid #b4b2a9;
+			border-radius: 6px;
+			padding: 5px 12px;
+			cursor: pointer;
+			font-family: inherit;
+			transition: background .12s, border-color .12s, color .12s;
+		}
+
+		.skip-btn:hover {
+			background: #f1efe8;
+			border-color: #888780;
+			color: #5f5e5a
+		}
+
+		.skip-warning {
+			display: none;
+			margin-top: .8rem;
+			padding: 11px 13px;
+			border: 0.5px solid #ef9f27;
+			border-radius: 8px;
+			background: #faeeda;
+		}
+
+		.skip-warning.visible {
+			display: flex;
+			gap: 9px;
+			align-items: flex-start
+		}
+
+		.warn-icon {
+			font-size: 16px;
+			flex-shrink: 0;
+			margin-top: 1px;
+			color: #ba7517
+		}
+
+		.skip-warning-text {
+			font-size: 13px;
+			color: #633806;
+			line-height: 1.6
+		}
+
+		.skip-warning-text b {
+			font-weight: 500
+		}
+
+		.skip-confirm-row {
+			display: flex;
+			gap: 8px;
+			margin-top: 9px;
+			flex-wrap: wrap
+		}
+
+		.skip-confirm-btn {
+			padding: 5px 13px;
+			font-size: 12px;
+			font-family: inherit;
+			border-radius: 6px;
+			cursor: pointer;
+			transition: opacity .12s;
+		}
+
+		.skip-confirm-btn.confirm {
+			background: #faeeda;
+			border: 0.5px solid #ef9f27;
+			color: #633806
+		}
+
+		.skip-confirm-btn.confirm:hover {
+			opacity: .72
+		}
+
+		.skip-confirm-btn.cancel {
+			background: transparent;
+			border: 0.5px solid #b4b2a9;
+			color: #5f5e5a
+		}
+
+		.skip-confirm-btn.cancel:hover {
+			background: #f1efe8
+		}
+
+		.skipped-badge {
+			display: none;
+			align-items: center;
+			gap: 8px;
+			font-size: 13px;
+			color: #ba7517;
+			margin-top: .8rem;
+			flex-wrap: wrap;
+		}
+
+		.skipped-badge.visible {
+			display: flex
+		}
+
+		.undo-link {
+			font-size: 12px;
+			color: #185fa5;
+			background: none;
+			border: none;
+			cursor: pointer;
+			font-family: inherit;
+			padding: 0;
+			text-decoration: underline;
+			text-underline-offset: 2px;
+		}
+
+		/* warnings */
+		.warning-hidden {
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity .18s;
+		}
+
+		.warning-visible {
+			opacity: 1;
+		}
+
+		/* nav */
+		.nav-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between
+		}
+
+		.nav-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 10px 20px;
+			font-size: 14px;
+			font-family: inherit;
+			border: 0.5px solid #b4b2a9;
+			border-radius: 8px;
+			background: transparent;
+			color: #1a1a18;
+			cursor: pointer;
+			transition: background .12s;
+		}
+
+		.nav-btn:hover {
+			background: #f1efe8
+		}
+
+		.nav-btn.primary {
+			background: #1a1a18;
+			color: #f5f4f0;
+			border-color: transparent
+		}
+
+		.nav-btn.primary:hover {
+			opacity: .84
+		}
+
+		.autosave {
+			font-size: 12px;
+			color: #888780
+		}
+
+		.nav-btn.primary.inactive {
+			opacity: .45;
+			filter: saturate(.7);
+		}
+
+		@media(max-width:460px) {
+			body {
+				padding: 1.25rem .9rem
+			}
+
+			.question-title {
+				font-size: 17px
+			}
+
+			.inputs-row {
+				gap: 5px
+			}
+
+			.inp-box {
+				padding: 5px 7px
+			}
+
+			.inp-box input {
+				font-size: 13px
+			}
+
+			.nav-btn {
+				padding: 9px 13px;
+				font-size: 13px
+			}
+		}
+
+		@media(prefers-color-scheme:dark) {
+			body {
+				background: #1a1a18;
+				color: #f1efe8
+			}
+
+			.progress-bar {
+				background: #333330
+			}
+
+			.progress-fill {
+				background: #b4b2a9
+			}
+
+			.progress-label,
+			.progress-count,
+			.axis-note {
+				color: #666460
+			}
+
+			.param-chip {
+				border-color: #444441;
+				color: #888780
+			}
+
+			.slider-card {
+				background: #242422;
+				border-color: #3a3a37
+			}
+
+			.slider-hint,
+			.derived-row {
+				color: #666460
+			}
+
+			.derived-row span b {
+				color: #888780
+			}
+
+			.inp-box {
+				background: #333330
+			}
+
+			.inp-box label {
+				color: #666460
+			}
+
+			.inp-box input {
+				color: #f1efe8
+			}
+
+			.inp-box input:focus {
+				color: #85b7eb
+			}
+
+			.hdl {
+				background: #242422;
+				border-color: #888780
+			}
+
+			.hdl:hover,
+			.hdl.drag {
+				border-color: #85b7eb;
+				box-shadow: 0 0 0 6px rgba(133, 183, 235, .14)
+			}
+
+			#h-mode {
+				background: #d4d2c8
+			}
+
+			#h-mode:hover,
+			#h-mode.drag {
+				background: #85b7eb
+			}
+
+			#track-line {
+				background: #444441
+			}
+
+			#track-fill {
+				background: #888780
+			}
+
+			.skip-btn {
+				border-color: #444441;
+				color: #666460
+			}
+
+			.skip-btn:hover {
+				background: #333330;
+				border-color: #666460;
+				color: #888780
+			}
+
+			.skip-warning {
+				background: #2e1800;
+				border-color: #a06010
+			}
+
+			.skip-warning-text {
+				color: #e0a84a
+			}
+
+			.warn-icon {
+				color: #e0a84a
+			}
+
+			.skip-confirm-btn.confirm {
+				background: #2e1800;
+				border-color: #a06010;
+				color: #e0a84a
+			}
+
+			.skip-confirm-btn.cancel {
+				border-color: #444441;
+				color: #666460
+			}
+
+			.skip-confirm-btn.cancel:hover {
+				background: #333330
+			}
+
+			.skipped-badge {
+				color: #e0a84a
+			}
+
+			.undo-link {
+				color: #85b7eb
+			}
+
+			.nav-btn {
+				border-color: #444441;
+				color: #f1efe8
+			}
+
+			.nav-btn:hover {
+				background: #333330
+			}
+
+			.nav-btn.primary {
+				background: #d4d2c8;
+				color: #1a1a18
+			}
+
+			.autosave {
+				color: #555450
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div id="wrap" role="main">
+
+		<div class="progress-area">
+			<div class="progress-top">
+				<span class="progress-label" data-i18n="progress_label">Equação de Drake · levantamento
+					astrobiológico</span>
+				<span class="progress-count">3 / 10</span>
+			</div>
+			<div class="progress-bar">
+				<div class="progress-fill"></div>
+			</div>
+		</div>
+
+		<div class="param-chip">
+			<span id="param-symbol"></span>
+			&nbsp;·&nbsp;
+			<span id="param-name"></span>
+		</div>
+		<h1 class="question-title" id="question-title"></h1>
+		<p class="axis-note" id="axis-note"></p>
+
+		<div class="slider-card" id="slider-card">
+			<p class="slider-hint" data-i18n="slider_hint">O pico é o valor mais provável. As alças laterais definem sua
+				incerteza em cada lado.</p>
+			<div class="inputs-row">
+				<div class="inp-box"><label data-i18n="pct10">Percentil 10</label><input id="inp-lo" type="text"
+						inputmode="decimal" /></div>
+				<div class="inp-box"><label data-i18n="mode_label">Moda (pico)</label><input id="inp-mode" type="text"
+						inputmode="decimal" /></div>
+				<div class="inp-box"><label data-i18n="pct90">Percentil 90</label><input id="inp-hi" type="text"
+						inputmode="decimal" /></div>
+			</div>
+			<div id="canvas-wrap"><canvas id="cv" role="img" aria-label="Distribuição de probabilidade"></canvas></div>
+			<div id="track-area">
+				<div id="track-line">
+					<div id="track-fill"></div>
+				</div>
+				<div class="hdl" id="h-lo"></div>
+				<div class="hdl" id="h-mode"></div>
+				<div class="hdl" id="h-hi"></div>
+			</div>
+			<div class="derived-row" id="derived"></div>
+		</div>
+
+		<div class="skip-area">
+			<button class="skip-btn" id="skip-btn" onclick="onSkipClick()" aria-expanded="false">
+				⊘&nbsp; <span data-i18n="skip_btn">Passar. Não tenho conhecimento suficiente para estimar este
+					parâmetro.</span>
+			</button>
+			<div class="skip-warning" id="skip-warning" role="alert" aria-live="polite">
+				<span class="warn-icon">⚠</span>
+				<div class="skip-warning-text">
+					<b data-i18n="skip_warning_title">Pular esta pergunta impede o cálculo do seu N.</b>
+					<span data-i18n="skip_warning_body"> Todos os 10 parâmetros são necessários para calcular o número
+						estimado de civilizações detectáveis. Você pode continuar, mas sua distribuição pessoal de N não
+						será exibida ao final.</span>
+					<div class="skip-confirm-row">
+						<button class="skip-confirm-btn confirm" onclick="confirmSkip()" data-i18n="skip_confirm">Pular
+							mesmo assim</button>
+						<button class="skip-confirm-btn cancel" onclick="cancelSkip()"
+							data-i18n="skip_cancel">Voltar</button>
+					</div>
+				</div>
+			</div>
+			<div class="skipped-badge" id="skipped-badge">
+				<span>⚠</span>
+				<span data-i18n="skipped_badge">Esta pergunta está pulada — sua distribuição de N não será
+					calculada.</span>
+				<button class="undo-link" onclick="undoSkip()" data-i18n="undo">Desfazer</button>
+			</div>
+		</div>
+
+		<p id="interaction-warning" data-i18n="interaction_warning"
+			style="display:none;margin-top:.8rem;font-size:13px;color:#ba7517;">
+		</p>
+
+		<div class="nav-row">
+			<button class="nav-btn" onclick="navigate(-1)">← <span data-i18n="prev">Anterior</span></button>
+			<span class="autosave" id="save-note" data-i18n="saved">● Rascunho salvo</span>
+			<button class="nav-btn primary" onclick="navigate(1)"><span data-i18n="next">Próxima</span> →</button>
+		</div>
+
+	</div>
+
+	<script>
+		/* ── i18n ── */
+		(async function () {
+			const supported = ['pt', 'en', 'es'];
+			const ul = new URLSearchParams(location.search).get('lang');
+			const bl = (navigator.language || 'pt').slice(0, 2);
+			const lang =
+				supported.includes(ul) ? ul :
+					supported.includes(bl) ? bl :
+						'pt';
+			document.documentElement.lang =
+				lang === 'pt' ? 'pt-BR' : lang;
+
+			/* translations */
+
+			const S = await fetch(`/i18n/${lang}.json`)
+				.then(r => r.json());
+			window._S = S;
+
+			/* generic ui strings */
+			document.querySelectorAll('[data-i18n]').forEach(el => {
+				const k = el.dataset.i18n;
+				if (S[k] !== undefined) {
+					el.textContent = S[k];
+				}
+
+			});
+
+			/* questions */
+			const questions = await fetch('/data/questions.json')
+				.then(r => r.json());
+
+			/* later: survey.html?q=0 survey.html?q=1 etc. */
+
+			const qIndex =
+				parseInt(new URLSearchParams(location.search).get('q')) || 0;
+			const Q = questions[qIndex] || questions[0];
+			window.Q = Q;
+
+			/* question-specific content */
+			document.getElementById('param-symbol').innerHTML =
+				Q.symbolHTML;
+			document.getElementById('param-name').textContent =
+				S[Q.paramKey];
+			document.getElementById('question-title').textContent =
+				S[Q.questionKey];
+			document.getElementById('axis-note').textContent =
+				S[Q.axisKey];
+
+			/* progress */
+			document.querySelector('.progress-count').textContent =
+				`${Q.number} / ${Q.totalQuestions}`;
+			const progress =
+				((qIndex + 1) / questions.length) * 100;
+
+			document.querySelector('.progress-fill').style.width =
+				`${progress}%`;
+
+			/* notify slider system */
+			window.dispatchEvent(new Event('question-loaded'));
+
+		})();
+
+		/* ── slider ── */
+		(function () {
+
+			/*
+			  Q = question config (would come from JSON in real app).
+			
+			  tMin / tMax are in log₁₀ space.
+			
+			  For a fraction parameter (0–1):
+				tMin = log10(0.001) = -3
+				tMax = log10(1)     =  0
+				visual centre t = (-3+0)/2 = -1.5  →  value ≈ 0.032
+			
+			  For an unbounded parameter (e.g. L, civilisation longevity, 1–10⁹ yr):
+				tMin = 0,  tMax = 9
+				visual centre t = 4.5  →  value ≈ 31 623 yr
+			
+			  initSpread: half-width in T-space for lo and hi around centre.
+			  Default 1.0 means the 10th/90th handles start ±1 log decade from mode.
+			*/
+			let Q = null;
+
+			const Z90 = 1.2816, SIG_MIN = 0.02, MIN_PX_GAP = 32;
+			let tLo, tMode, tHi, skipped = false;
+
+			let hasInteracted = false;
+			let answerPreviouslySaved = false;
+
+			function tMin() { return Q.tMin; }
+			function tMax() { return Q.tMax; }
+			function tSpan() { return Q.tMax - Q.tMin; }
+			function tCenter() { return (Q.tMin + Q.tMax) / 2; }  /* visual midpoint */
+			function clampT(t) { return Math.max(tMin(), Math.min(tMax(), t)); }
+			function fracOf(t) { return (t - tMin()) / tSpan(); }
+			function fromT(t) { return Math.pow(10, t); }
+			function toT(v) { return Math.log10(Math.max(1e-15, v)); }
+
+			function trackWidth() {
+				const tl = document.getElementById('track-line'); return tl ? tl.offsetWidth : 400;
+			}
+			function minTGap() {
+				const pgT = SIG_MIN * Z90;
+				const pgPx = MIN_PX_GAP / trackWidth() * tSpan();
+				return Math.max(pgT, pgPx);
+			}
+			function safeSet(nl, nm, nh) {
+				const mg = minTGap();
+				nm = clampT(nm);
+				nm = Math.max(tMin() + mg, Math.min(tMax() - mg, nm));
+				nl = clampT(Math.min(nl, nm - mg));
+				nh = clampT(Math.max(nh, nm + mg));
+				tLo = nl; tMode = nm; tHi = nh;
+			}
+
+			function initState() {
+				/* mode at visual centre; lo/hi ± initSpread, clamped to axis bounds */
+				const tc = tCenter();
+				safeSet(tc - Q.initSpread, tc, tc + Q.initSpread);
+			}
+
+			function splitPDF(t, tM, tL, tH) {
+				const sL = Math.max(SIG_MIN, (tM - tL) / Z90);
+				const sR = Math.max(SIG_MIN, (tH - tM) / Z90);
+				const A = Math.sqrt(2 / Math.PI) / (sL + sR);
+				const s = t <= tM ? sL : sR, z = (t - tM) / s, e = Math.exp(-0.5 * z * z);
+				return isFinite(e) ? A * e : 0;
+			}
+			function medT() {
+				const sL = Math.max(SIG_MIN, (tMode - tLo) / Z90);
+				const sR = Math.max(SIG_MIN, (tHi - tMode) / Z90);
+				return tMode + (sR - sL) * Math.sqrt(2 / Math.PI) / 2;
+			}
+			function q25T() { return tMode - 0.6745 * Math.max(SIG_MIN, (tMode - tLo) / Z90); }
+			function q75T() { return tMode + 0.6745 * Math.max(SIG_MIN, (tHi - tMode) / Z90); }
+
+			function fmtV(v) {
+				const a = Math.abs(v);
+				/* scientific notation for very small or very large values */
+				if (a >= 1e4 || (a > 0 && a < 0.01)) {
+					return v.toExponential(1).replace('e+', 'e');
+				}
+				if (a >= 100) return v.toFixed(0);
+				if (a >= 10) return v.toFixed(1);
+				if (a >= 1) return v.toFixed(2);
+				if (a >= 0.1) return v.toFixed(3);
+				return v.toFixed(4);
+			}
+
+			function tickStep() {
+				const range = tMax() - tMin();
+				if (range <= 10) return 1;
+				if (range <= 20) return 2;
+				if (range <= 50) return 5;
+				return 10;
+			}
+
+			/* ── axis ticks: one per log decade, nicely labelled ── */
+			function superscript(n) {
+				const map = {
+					'-': '⁻',
+					'0': '⁰',
+					'1': '¹',
+					'2': '²',
+					'3': '³',
+					'4': '⁴',
+					'5': '⁵',
+					'6': '⁶',
+					'7': '⁷',
+					'8': '⁸',
+					'9': '⁹'
+				};
+				return String(n)
+					.split('')
+					.map(c => map[c] || c)
+					.join('');
+			}
+
+			function formatLogTick(e) {
+				/* human-friendly common values	*/
+				if (e === -3) return '0.001';
+				if (e === -2) return '0.01';
+				if (e === -1) return '0.1';
+				if (e === 0) return '1';
+				if (e === 1) return '10';
+				if (e === 2) return '100';
+				if (e === 3) return '1000';
+				return '10' + superscript(e);
+			}
+
+			function axisTicks() {
+				const ticks = [];
+				for (
+					let e = Math.ceil(tMin());
+					e <= Math.floor(tMax());
+					e += tickStep()
+				) {
+					ticks.push({
+						t: e,
+						label: formatLogTick(e)
+					});
+				}
+				return ticks;
+			}
+
+			/* ── draw ── */
+			function draw() {
+				const wrap = document.getElementById('canvas-wrap');
+				const canvas = document.getElementById('cv');
+				const dpr = window.devicePixelRatio || 1;
+				const cssW = wrap.clientWidth, cssH = 185;
+				canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+				canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+
+				const ctx = canvas.getContext('2d');
+				const W = canvas.width, H = canvas.height;
+				ctx.clearRect(0, 0, W, H);
+
+				const PC = { top: 8, right: 20, bottom: 26, left: 20 };
+				const P = { top: PC.top * dpr, right: PC.right * dpr, bottom: PC.bottom * dpr, left: PC.left * dpr };
+				const pw = W - P.left - P.right, ph = H - P.top - P.bottom;
+
+				const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+				const cStr = dark ? 'rgba(200,160,100,.88)' : 'rgba(140,84,28,.82)';
+				const cFil = dark ? 'rgba(200,160,100,.20)' : 'rgba(180,120,50,.16)';
+				const cIQR = dark ? 'rgba(60,155,115,.33)' : 'rgba(20,135,85,.23)';
+				const cAx = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
+				const cTxt = dark ? 'rgba(255,255,255,.42)' : 'rgba(0,0,0,.40)';
+				const cDsh = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.12)';
+
+				const N = 500, ts = [], ys = [];
+				let ymax = 0;
+				for (let i = 0; i <= N; i++) {
+					const t = tMin() + (i / N) * tSpan();
+					const y = splitPDF(t, tMode, tLo, tHi);
+					ts.push(t); ys.push(y);
+					if (isFinite(y) && y > ymax) ymax = y;
+				}
+				if (!isFinite(ymax) || ymax === 0) ymax = 1;
+				ymax *= 1.18;
+
+				function xpx(t) { return P.left + fracOf(t) * pw; }
+				function ypx(y) { return P.top + ph - (Math.min(y, ymax) / ymax) * ph; }
+
+				const q2 = clampT(q25T()), q7 = clampT(q75T());
+
+				/* full fill */
+				ctx.beginPath(); ctx.moveTo(xpx(ts[0]), ypx(0));
+				for (let i = 0; i <= N; i++) ctx.lineTo(xpx(ts[i]), ypx(ys[i]));
+				ctx.lineTo(xpx(ts[N]), ypx(0)); ctx.closePath();
+				ctx.fillStyle = cFil; ctx.fill();
+
+				/* IQR fill */
+				let inQ = false; ctx.beginPath();
+				for (let i = 0; i <= N; i++) {
+					const t = ts[i], y = ys[i];
+					if (t >= q2 && t <= q7) {
+						if (!inQ) { ctx.moveTo(xpx(t), ypx(0)); inQ = true; }
+						ctx.lineTo(xpx(t), ypx(y));
+					} else if (inQ) {
+						ctx.lineTo(xpx(t), ypx(0)); ctx.closePath();
+						ctx.fillStyle = cIQR; ctx.fill();
+						ctx.beginPath(); inQ = false;
+					}
+				}
+				if (inQ) { ctx.lineTo(xpx(ts[N]), ypx(0)); ctx.closePath(); ctx.fillStyle = cIQR; ctx.fill(); }
+
+				/* outline */
+				ctx.beginPath(); ctx.moveTo(xpx(ts[0]), ypx(ys[0]));
+				for (let i = 1; i <= N; i++) ctx.lineTo(xpx(ts[i]), ypx(ys[i]));
+				ctx.strokeStyle = cStr; ctx.lineWidth = 1.8 * dpr; ctx.stroke();
+
+				/* dashed verticals */
+				[tLo, tMode, tHi].forEach(t => {
+					const px = xpx(t);
+					if (px < P.left || px > W - P.right) return;
+					const y = splitPDF(t, tMode, tLo, tHi);
+					ctx.beginPath(); ctx.moveTo(px, ypx(y)); ctx.lineTo(px, ypx(0));
+					ctx.strokeStyle = cDsh; ctx.lineWidth = dpr;
+					ctx.setLineDash([3 * dpr, 3 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+				});
+
+				/* axis line */
+				ctx.beginPath();
+				ctx.moveTo(P.left, P.top + ph); ctx.lineTo(P.left + pw, P.top + ph);
+				ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
+
+				/* tick labels */
+				const ticks = axisTicks();
+				const fPx = Math.max(11, Math.round(11.5 * dpr));
+				ctx.fillStyle = cTxt;
+				ctx.font = `${fPx}px system-ui,-apple-system,sans-serif`;
+				ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+				const tickY = P.top + ph + 4 * dpr;
+
+				/* skip ticks that would overlap on narrow screens */
+				const minTickSpacePx = 36 * dpr;
+				let lastPx = -Infinity;
+				ticks.forEach(({ t, label }) => {
+					const px = xpx(t);
+					if (px < P.left - 1 || px > W - P.right + 1) return;
+					if (px - lastPx < minTickSpacePx) return;
+					lastPx = px;
+					ctx.fillText(label, px, tickY);
+					ctx.beginPath(); ctx.moveTo(px, P.top + ph); ctx.lineTo(px, P.top + ph + 3 * dpr);
+					ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
+				});
+			}
+
+			/* ── UI update ── */
+			function updateUI() {
+				function hpct(t) { return (fracOf(clampT(t)) * 100).toFixed(3) + '%'; }
+				document.getElementById('h-lo').style.left = hpct(tLo);
+				document.getElementById('h-mode').style.left = hpct(tMode);
+				document.getElementById('h-hi').style.left = hpct(tHi);
+				const lp = fracOf(clampT(tLo)) * 100, hp = fracOf(clampT(tHi)) * 100;
+				const fill = document.getElementById('track-fill');
+				fill.style.left = lp + '%'; fill.style.width = (hp - lp) + '%';
+				document.getElementById('inp-lo').value = fmtV(fromT(tLo));
+				document.getElementById('inp-mode').value = fmtV(fromT(tMode));
+				document.getElementById('inp-hi').value = fmtV(fromT(tHi));
+				const S = window._S || {};
+				const mt = clampT(medT()), q2 = clampT(q25T()), q7 = clampT(q75T());
+				const sL = Math.max(SIG_MIN, (tMode - tLo) / Z90).toFixed(3);
+				const sR = Math.max(SIG_MIN, (tHi - tMode) / Z90).toFixed(3);
+				document.getElementById('derived').innerHTML =
+					`<span>${S.median || 'Mediana'}: <b>${fmtV(fromT(mt))}</b></span>` +
+					`<span>IQR: [<b>${fmtV(fromT(q2))}</b>, <b>${fmtV(fromT(q7))}</b>]</span>` +
+					`<span>σ<sub>L</sub>: <b>${sL}</b></span>` +
+					`<span>σ<sub>R</sub>: <b>${sR}</b></span>`;
+			}
+
+			function refresh() { updateUI(); draw(); updateNextButtonState(); }
+
+			function saveDraft() {
+				const key = `drake-answer-${Q.id}`;
+				const data = {
+					tLo,
+					tMode,
+					tHi,
+					skipped,
+					answered:
+						hasInteracted ||
+						skipped
+				};
+				localStorage.setItem(
+					key,
+					JSON.stringify(data)
+				);
+			}
+
+			function loadDraft() {
+				const key = `drake-answer-${Q.id}`;
+				const raw = localStorage.getItem(key);
+				if (!raw) return;
+				try {
+					const data = JSON.parse(raw);
+					if (data.skipped) {
+						skipped = true;
+						setSkippedUI(true);
+					}
+					else if (
+						data.tLo !== undefined &&
+						data.tMode !== undefined &&
+						data.tHi !== undefined
+					) {
+						tLo = data.tLo;
+						tMode = data.tMode;
+						tHi = data.tHi;
+						answerPreviouslySaved = !!data.answered;
+					}
+				}
+				catch (err) {
+					console.error(err);
+				}
+			}
+
+			function loadSavedAnswer(data) {
+				safeSet(data.tLo, data.tMode, data.tHi);
+				skipped = data.skipped || false;
+				answerPreviouslySaved = true;
+				updateNextButtonState();
+				refresh();
+			}
+
+			function hideInteractionWarning() {
+				const warn = document.getElementById('interaction-warning');
+				if (warn) {
+					warn.style.display = 'none';
+				}
+			}
+
+			function updateNextButtonState() {
+				const nextBtn = document.querySelector('.nav-btn.primary');
+				if (!nextBtn) return;
+				const answered =
+					hasInteracted ||
+					skipped ||
+					answerPreviouslySaved;
+				nextBtn.classList.toggle('inactive', !answered);
+			}
+
+			/* ── skip ── */
+			function setSkippedUI(s) {
+				skipped = s;
+				document.getElementById('slider-card').classList.toggle('dimmed', s);
+				document.getElementById('skipped-badge').classList.toggle('visible', s);
+				document.getElementById('skip-warning').classList.remove('visible');
+				document.getElementById('skip-btn').style.display = s ? 'none' : '';
+				saveDraft();
+			}
+			window.onSkipClick = () => document.getElementById('skip-warning').classList.add('visible');
+			window.confirmSkip = () => setSkippedUI(true);
+			window.cancelSkip = () => document.getElementById('skip-warning').classList.remove('visible');
+			window.undoSkip = () => setSkippedUI(false);
+
+			/* ── drag ── */
+			let dragging = null, dsMode = 0, dsLo = 0, dsHi = 0;
+			function trackFrac(cx) {
+				const r = document.getElementById('track-line').getBoundingClientRect();
+				return Math.max(0, Math.min(1, (cx - r.left) / r.width));
+			}
+			['lo', 'mode', 'hi'].forEach(id => {
+				document.getElementById('h-' + id).addEventListener('pointerdown', e => {
+					e.preventDefault(); dragging = id;
+					dsMode = tMode; dsLo = tLo; dsHi = tHi;
+					document.getElementById('h-' + id).classList.add('drag');
+					document.addEventListener('pointermove', onMove);
+					document.addEventListener('pointerup', onUp);
+				});
+			});
+			function onMove(e) {
+				if (!dragging) return;
+				hasInteracted = true;
+				hideInteractionWarning();
+				const t = tMin() + trackFrac(e.clientX) * tSpan();
+				if (dragging === 'mode') { const d = t - dsMode; safeSet(dsLo + d, t, dsHi + d); }
+				else if (dragging === 'lo') safeSet(t, tMode, tHi);
+				else safeSet(tLo, tMode, t);
+				refresh();
+			}
+			function onUp() {
+				if (dragging) {
+					document.getElementById('h-' + dragging).classList.remove('drag');
+					dragging = null; saveDraft();
+				}
+				document.removeEventListener('pointermove', onMove);
+				document.removeEventListener('pointerup', onUp);
+			}
+			function setSkippedUI(s) {
+				skipped = s;
+				updateNextButtonState();
+				hideInteractionWarning();
+				document.getElementById('slider-card').classList.toggle('dimmed', s);
+				document.getElementById('skipped-badge').classList.toggle('visible', s);
+				document.getElementById('skip-warning').classList.remove('visible');
+				document.getElementById('skip-btn').style.display = s ? 'none' : '';
+				saveDraft();
+			}
+			/* ── text inputs ── */
+			function parseInp(s) { const v = parseFloat(s.replace(',', '.')); return isNaN(v) ? null : v; }
+			document.getElementById('inp-lo').addEventListener('change', function () {
+				const v = parseInp(this.value); if (v != null && v > 0) { hasInteracted = true; hideInteractionWarning(); safeSet(toT(v), tMode, tHi); refresh(); saveDraft(); }
+			});
+			document.getElementById('inp-mode').addEventListener('change', function () {
+				const v = parseInp(this.value); if (v == null || v <= 0) return;
+				const nt = clampT(toT(v)), d = nt - tMode; hasInteracted = true; hideInteractionWarning();
+				safeSet(tLo + d, nt, tHi + d); refresh(); saveDraft();
+			});
+			document.getElementById('inp-hi').addEventListener('change', function () {
+				const v = parseInp(this.value); if (v != null && v > 0) { hasInteracted = true; hideInteractionWarning(); safeSet(tLo, tMode, toT(v)); refresh(); saveDraft(); }
+			});
+
+			window.navigate = function (dir) {
+				const params = new URLSearchParams(location.search);
+				const currentQ =
+					parseInt(params.get('q')) || 0;
+				const nextQ = currentQ + dir;
+
+				/* bounds protection */
+				if (nextQ < 0) {
+					return;
+				}
+				/* backwards always allowed	*/
+				if (dir < 0) {
+					params.set('q', nextQ);
+					location.search = params.toString();
+					return;
+				}
+				/* forward validation */
+				if (
+					!hasInteracted &&
+					!skipped &&
+					!answerPreviouslySaved
+				) {
+					const warn = document.getElementById('interaction-warning');
+					if (warn) {
+						warn.style.display = 'block';
+					}
+					return;
+				}
+				/* save current answer (later backend/localStorage)	*/
+				saveDraft();
+				/* navigate */
+				params.set('q', nextQ);
+				location.search = params.toString();
+			};
+			window.addEventListener('resize', refresh);
+			window.addEventListener('question-loaded', () => {
+				Q = window.Q;
+				initState();
+				loadDraft();
+				refresh();
+			});
+		})();
+	</script>
+</body>
+
+</html>

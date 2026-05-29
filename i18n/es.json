@@ -1,0 +1,50 @@
+{
+	"Rs_param":"Tasa de formación estelar en nuestra galaxia",
+	"Rs_question":"¿Cuál es la tasa promedio de formación de estrellas adecuadas (estrellas/año) en nuestra galaxia?",
+	"Rs_axis":"Escala logarítmica · de 0,01 a 1000",
+
+	"fp_param":"Fracción de estrellas con planetas",
+	"fp_question":"¿Qué fracción de estrellas forman planetas?",
+	"fp_axis":"Escala logarítmica · de 0,01 a 1",
+
+	"ne_param": "número de planetas habitables por estrella",
+	"ne_question": "¿Cuál es el número promedio de planetas habitables por estrella?",
+	"ne_axis": "Escala logarítmica · de 10^-8 a 100",
+
+	"fl_param": "fracción de planetas habitables con vida",
+	"fl_question": "¿En qué fracción de planetas habitables surge alguna forma de vida?",
+	"fl_axis": "Escala logarítmica · de 10^-31 a 1",
+
+	"fi_param": "fracción de planetas habitables con vida que desarrollan inteligencia",
+	"fi_question": "¿En qué fracción de planetas habitables con vida evoluciona la inteligencia?",
+	"fi_axis": "Escala logarítmica · de 10^-20 a 1",
+
+	"fc_param":"fracción capaz de comunicación interestelar",
+	"fc_question":"¿Qué fracción de planetas con vida inteligente son capaces de comunicación interestelar?",
+	"fc_axis":"Escala logarítmica · de 10^-8 a 1",
+
+	"L_param":"vida útil de las civilizaciones detectables",
+	"L_question":"¿Durante cuántos años una civilización permanece detectable?",
+	"L_axis":"Escala logarítmica · de 10 a 10 mil millones",
+
+    "progress_label":"Ecuación de Drake · encuesta astrobiológica",
+    "param_name":"fracción de estrellas con planetas",
+    "question_text":"¿Qué fracción de las estrellas tiene al menos un planeta?",
+    "axis_note":"Escala logarítmica · de 0,001 a 1",
+    "slider_hint":"El pico es el valor más probable. Las asas laterales definen su incertidumbre a cada lado.",
+    "pct10":"Percentil 10",
+    "mode_label":"Moda (pico)",
+    "pct90":"Percentil 90",
+    "skip_btn":"Omitir. No tengo suficiente conocimiento para estimar este parámetro.",
+    "skip_warning_title":"Omitir esta pregunta impide el cálculo de su N.",
+    "skip_warning_body":" Los 10 parámetros son necesarios para calcular el número estimado de civilizaciones detectables. Puede continuar, pero su distribución personal de N no se mostrará al final.",
+    "skip_confirm":"Omitir de todas formas", 
+	"skip_cancel":"Volver",
+    "skipped_badge":"Esta pregunta está omitida — su distribución de N no será calculada.",
+    "undo":"Deshacer", 
+	"prev":"Anterior", 
+	"next":"Siguiente", 
+	"saved":"● Borrador guardado", 
+	"median":"Mediana",
+    "interaction_warning":"Mueva el control al menos un poco u omita esta pregunta."
+  }

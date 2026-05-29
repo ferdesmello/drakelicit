@@ -1,0 +1,50 @@
+{
+	"Rs_param":"Star formation rate in our galaxy",
+	"Rs_question":"What is the average rate of formation of suitable stars (stars/year) in our galaxy?",
+	"Rs_axis":"Logarithmic scale · from 0.01 to 1000",
+
+	"fp_param":"fraction of stars with planets",
+	"fp_question":"What fraction of stars form planets?",
+	"fp_axis":"Logarithmic scale · from 0.01 to 1",
+
+	"ne_param":"number of habitable planets per star",
+	"ne_question":"What is the average number of habitable planets per star?",
+	"ne_axis":"Logarithmic scale · from 10^-8 to 100",
+
+	"fl_param":"fraction habitable planets with life",
+	"fl_question":"On what fraction of habitable planets does any form of life emerge?",
+	"fl_axis":"Logarithmic scale · from 10^-31 to 1",
+
+	"fi_param":"fraction of habitable planets with life that develop intelligence",
+	"fi_question":"On what fraction of habitable planets with life does intelligence evolve?",
+	"fi_axis":"Logarithmic scale · from 10^-20 to 1",
+
+	"fc_param":"fraction capable of interstellar communication",
+	"fc_question":"What fraction of planets with intelligent life are capable of interstellar communication?",
+	"fc_axis":"Logarithmic scale · from 10^-8 to 1",
+
+	"L_param":"lifetime of detectable civilizations",
+	"L_question":"For how many years does a civilization remain detectable?",
+	"L_axis":"Logarithmic scale · from 10 to 10B",
+
+    "progress_label":"Drake equation · astrobiological survey",
+    "param_name":"fraction of stars with planets",
+    "question_text":"What fraction of stars have at least one planet?",
+    "axis_note":"Logarithmic scale · from 0.001 to 1",
+    "slider_hint":"The peak is your most likely value. The side handles set your uncertainty on each side.",
+    "pct10":"10th percentile",
+	"mode_label":"Mode (peak)",
+	"pct90":"90th percentile",
+    "skip_btn":"Skip. I do not have enough knowledge to estimate this parameter.",
+    "skip_warning_title":"Skipping this question prevents calculation of your N.",
+    "skip_warning_body":" All 10 parameters are required to compute the estimated number of detectable civilisations. You may continue, but your personal N distribution will not be shown at the end.",
+    "skip_confirm":"Skip anyway",
+	"skip_cancel":"Go back",
+    "skipped_badge":"This question is skipped — your N distribution will not be calculated.",
+    "undo":"Undo",
+	"prev":"Previous",
+	"next":"Next",
+	"saved":"● Draft saved",
+	"median":"Median",
+	"interaction_warning":"Move the slider at least a little or skip this question."
+  }
