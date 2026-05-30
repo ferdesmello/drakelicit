@@ -40,13 +40,13 @@
 		}
 
 		.progress-label {
-			font-size: 12px;
+			font-size: 13px;
 			color: #888780;
 			letter-spacing: .04em
 		}
 
 		.progress-count {
-			font-size: 12px;
+			font-size: 13px;
 			color: #888780
 		}
 
@@ -79,14 +79,14 @@
 		}
 
 		.question-title {
-			font-size: 20px;
+			font-size: 22px;
 			font-weight: 500;
 			line-height: 1.3;
 			margin-bottom: .35rem
 		}
 
 		.axis-note {
-			font-size: 12px;
+			font-size: 13px;
 			color: #888780;
 			margin-bottom: 1.5rem
 		}
@@ -107,7 +107,7 @@
 		}
 
 		.slider-hint {
-			font-size: 13px;
+			font-size: 15px;
 			color: #888780;
 			margin-bottom: .9rem
 		}
@@ -204,7 +204,7 @@
 
 		.inp-box label {
 			display: block;
-			font-size: 10px;
+			font-size: 12px;
 			color: #888780;
 			text-transform: uppercase;
 			letter-spacing: .05em;
@@ -213,7 +213,7 @@
 
 		.inp-box input {
 			width: 100%;
-			font-size: 14px;
+			font-size: 16px;
 			font-family: monospace;
 			background: transparent;
 			border: none;
@@ -229,7 +229,7 @@
 		.derived-row {
 			display: flex;
 			gap: 1rem;
-			font-size: 12px;
+			font-size: 13px;
 			color: #888780;
 			flex-wrap: wrap;
 			padding-top: 1px
@@ -249,7 +249,7 @@
 			display: inline-flex;
 			align-items: center;
 			gap: 7px;
-			font-size: 12px;
+			font-size: 13px;
 			color: #888780;
 			background: transparent;
 			border: 0.5px solid #b4b2a9;
@@ -289,7 +289,7 @@
 		}
 
 		.skip-warning-text {
-			font-size: 13px;
+			font-size: 14px;
 			color: #633806;
 			line-height: 1.6
 		}
@@ -338,7 +338,7 @@
 			display: none;
 			align-items: center;
 			gap: 8px;
-			font-size: 13px;
+			font-size: 14px;
 			color: #ba7517;
 			margin-top: .8rem;
 			flex-wrap: wrap;
@@ -408,7 +408,7 @@
 		}
 
 		.autosave {
-			font-size: 12px;
+			font-size: 13px;
 			color: #888780
 		}
 
@@ -423,7 +423,7 @@
 			}
 
 			.question-title {
-				font-size: 17px
+				font-size: 18px
 			}
 
 			.inputs-row {
@@ -718,6 +718,7 @@
 				parseInt(new URLSearchParams(location.search).get('q')) || 0;
 			const Q = questions[qIndex] || questions[0];
 			window.Q = Q;
+				window._questions = questions;
 
 			/* question-specific content */
 			document.getElementById('param-symbol').innerHTML =
@@ -731,7 +732,7 @@
 
 			/* progress */
 			document.querySelector('.progress-count').textContent =
-				`${Q.number} / ${Q.totalQuestions}`;
+				`${qIndex + 1} / ${questions.length}`;
 			const progress =
 				((qIndex + 1) / questions.length) * 100;
 
@@ -745,43 +746,37 @@
 
 		/* ── slider ── */
 		(function () {
-
 			/*
-			  Q = question config (would come from JSON in real app).
-			
-			  tMin / tMax are in log₁₀ space.
-			
-			  For a fraction parameter (0–1):
-				tMin = log10(0.001) = -3
-				tMax = log10(1)     =  0
-				visual centre t = (-3+0)/2 = -1.5  →  value ≈ 0.032
-			
-			  For an unbounded parameter (e.g. L, civilisation longevity, 1–10⁹ yr):
-				tMin = 0,  tMax = 9
-				visual centre t = 4.5  →  value ≈ 31 623 yr
-			
-			  initSpread: half-width in T-space for lo and hi around centre.
-			  Default 1.0 means the 10th/90th handles start ±1 log decade from mode.
+			  Q.axisMode = 'log' | 'lin'
+			  For log: tMin/tMax are log10 values; toT/fromT convert via log10/pow10.
+			  For lin: tMin/tMax are the actual axis bounds (e.g. 0 and 1);
+			           toT/fromT are identity functions.
+			  initSpread: half-width in T-space for lo and hi around the visual centre.
 			*/
 			let Q = null;
 
 			const Z90 = 1.2816, SIG_MIN = 0.02, MIN_PX_GAP = 32;
 			let tLo, tMode, tHi, skipped = false;
-
 			let hasInteracted = false;
 			let answerPreviouslySaved = false;
 
+			/* ── axis helpers: all branch on Q.axisMode ── */
+			function isLog() { return !Q || Q.axisMode !== 'lin'; }
 			function tMin() { return Q.tMin; }
 			function tMax() { return Q.tMax; }
 			function tSpan() { return Q.tMax - Q.tMin; }
-			function tCenter() { return (Q.tMin + Q.tMax) / 2; }  /* visual midpoint */
+			function tCenter() { return (Q.tMin + Q.tMax) / 2; }
 			function clampT(t) { return Math.max(tMin(), Math.min(tMax(), t)); }
 			function fracOf(t) { return (t - tMin()) / tSpan(); }
-			function fromT(t) { return Math.pow(10, t); }
-			function toT(v) { return Math.log10(Math.max(1e-15, v)); }
+			function fromT(t) { return isLog() ? Math.pow(10, t) : t; }
+			function toT(v) {
+				if (isLog()) return Math.log10(Math.max(1e-15, v));
+				return Math.max(tMin(), Math.min(tMax(), v));
+			}
 
 			function trackWidth() {
-				const tl = document.getElementById('track-line'); return tl ? tl.offsetWidth : 400;
+				const tl = document.getElementById('track-line');
+				return tl ? tl.offsetWidth : 400;
 			}
 			function minTGap() {
 				const pgT = SIG_MIN * Z90;
@@ -798,11 +793,11 @@
 			}
 
 			function initState() {
-				/* mode at visual centre; lo/hi ± initSpread, clamped to axis bounds */
 				const tc = tCenter();
 				safeSet(tc - Q.initSpread, tc, tc + Q.initSpread);
 			}
 
+			/* ── split-normal PDF in T-space (same formula for log and lin) ── */
 			function splitPDF(t, tM, tL, tH) {
 				const sL = Math.max(SIG_MIN, (tM - tL) / Z90);
 				const sR = Math.max(SIG_MIN, (tH - tM) / Z90);
@@ -818,19 +813,37 @@
 			function q25T() { return tMode - 0.6745 * Math.max(SIG_MIN, (tMode - tLo) / Z90); }
 			function q75T() { return tMode + 0.6745 * Math.max(SIG_MIN, (tHi - tMode) / Z90); }
 
+			/* ── value formatting ── */
 			function fmtV(v) {
-				const a = Math.abs(v);
-				/* scientific notation for very small or very large values */
-				if (a >= 1e4 || (a > 0 && a < 0.01)) {
-					return v.toExponential(1).replace('e+', 'e');
+				if (!isLog()) {
+					/* linear: show 3 decimal places, clamp to axis range */
+					return Math.max(tMin(), Math.min(tMax(), v)).toFixed(3);
 				}
+				const a = Math.abs(v);
+				if (a >= 1e4 || (a > 0 && a < 0.01)) return v.toExponential(1).replace('e+', 'e');
 				if (a >= 100) return v.toFixed(0);
-				if (a >= 10) return v.toFixed(1);
-				if (a >= 1) return v.toFixed(2);
+				if (a >= 10)  return v.toFixed(1);
+				if (a >= 1)   return v.toFixed(2);
 				if (a >= 0.1) return v.toFixed(3);
 				return v.toFixed(4);
 			}
 
+			/* ── axis ticks ── */
+			function superscript(n) {
+				const map = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³',
+				             '4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+				return String(n).split('').map(c => map[c] || c).join('');
+			}
+			function formatLogTick(e) {
+				if (e === -3) return '0.001';
+				if (e === -2) return '0.01';
+				if (e === -1) return '0.1';
+				if (e === 0)  return '1';
+				if (e === 1)  return '10';
+				if (e === 2)  return '100';
+				if (e === 3)  return '1000';
+				return '10' + superscript(e);
+			}
 			function tickStep() {
 				const range = tMax() - tMin();
 				if (range <= 10) return 1;
@@ -838,53 +851,26 @@
 				if (range <= 50) return 5;
 				return 10;
 			}
-
-			/* ── axis ticks: one per log decade, nicely labelled ── */
-			function superscript(n) {
-				const map = {
-					'-': '⁻',
-					'0': '⁰',
-					'1': '¹',
-					'2': '²',
-					'3': '³',
-					'4': '⁴',
-					'5': '⁵',
-					'6': '⁶',
-					'7': '⁷',
-					'8': '⁸',
-					'9': '⁹'
-				};
-				return String(n)
-					.split('')
-					.map(c => map[c] || c)
-					.join('');
-			}
-
-			function formatLogTick(e) {
-				/* human-friendly common values	*/
-				if (e === -3) return '0.001';
-				if (e === -2) return '0.01';
-				if (e === -1) return '0.1';
-				if (e === 0) return '1';
-				if (e === 1) return '10';
-				if (e === 2) return '100';
-				if (e === 3) return '1000';
-				return '10' + superscript(e);
-			}
-
 			function axisTicks() {
-				const ticks = [];
-				for (
-					let e = Math.ceil(tMin());
-					e <= Math.floor(tMax());
-					e += tickStep()
-				) {
-					ticks.push({
-						t: e,
-						label: formatLogTick(e)
-					});
+				if (isLog()) {
+					const ticks = [];
+					for (let e = Math.ceil(tMin()); e <= Math.floor(tMax()); e += tickStep()) {
+						ticks.push({ t: e, label: formatLogTick(e) });
+					}
+					return ticks;
+				} else {
+					/* linear: ~6 evenly spaced ticks */
+					const ticks = [];
+					const span = tMax() - tMin();
+					const raw = span / 5;
+					const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+					const step = Math.ceil(raw / mag) * mag;
+					const start = Math.ceil(tMin() / step) * step;
+					for (let v = start; v <= tMax() + 1e-9; v = Math.round((v + step) * 1e10) / 1e10) {
+						ticks.push({ t: v, label: v.toFixed(2).replace(/\.?0+$/, '') });
+					}
+					return ticks;
 				}
-				return ticks;
 			}
 
 			/* ── draw ── */
@@ -907,8 +893,8 @@
 				const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
 				const cStr = dark ? 'rgba(200,160,100,.88)' : 'rgba(140,84,28,.82)';
 				const cFil = dark ? 'rgba(200,160,100,.20)' : 'rgba(180,120,50,.16)';
-				const cIQR = dark ? 'rgba(60,155,115,.33)' : 'rgba(20,135,85,.23)';
-				const cAx = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
+				const cIQR = dark ? 'rgba(60,155,115,.33)'  : 'rgba(20,135,85,.23)';
+				const cAx  = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
 				const cTxt = dark ? 'rgba(255,255,255,.42)' : 'rgba(0,0,0,.40)';
 				const cDsh = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.12)';
 
@@ -976,8 +962,6 @@
 				ctx.font = `${fPx}px system-ui,-apple-system,sans-serif`;
 				ctx.textAlign = 'center'; ctx.textBaseline = 'top';
 				const tickY = P.top + ph + 4 * dpr;
-
-				/* skip ticks that would overlap on narrow screens */
 				const minTickSpacePx = 36 * dpr;
 				let lastPx = -Infinity;
 				ticks.forEach(({ t, label }) => {
@@ -994,15 +978,15 @@
 			/* ── UI update ── */
 			function updateUI() {
 				function hpct(t) { return (fracOf(clampT(t)) * 100).toFixed(3) + '%'; }
-				document.getElementById('h-lo').style.left = hpct(tLo);
+				document.getElementById('h-lo').style.left   = hpct(tLo);
 				document.getElementById('h-mode').style.left = hpct(tMode);
-				document.getElementById('h-hi').style.left = hpct(tHi);
+				document.getElementById('h-hi').style.left   = hpct(tHi);
 				const lp = fracOf(clampT(tLo)) * 100, hp = fracOf(clampT(tHi)) * 100;
 				const fill = document.getElementById('track-fill');
 				fill.style.left = lp + '%'; fill.style.width = (hp - lp) + '%';
-				document.getElementById('inp-lo').value = fmtV(fromT(tLo));
+				document.getElementById('inp-lo').value   = fmtV(fromT(tLo));
 				document.getElementById('inp-mode').value = fmtV(fromT(tMode));
-				document.getElementById('inp-hi').value = fmtV(fromT(tHi));
+				document.getElementById('inp-hi').value   = fmtV(fromT(tHi));
 				const S = window._S || {};
 				const mt = clampT(medT()), q2 = clampT(q25T()), q7 = clampT(q75T());
 				const sL = Math.max(SIG_MIN, (tMode - tLo) / Z90).toFixed(3);
@@ -1018,19 +1002,8 @@
 
 			function saveDraft() {
 				const key = `drake-answer-${Q.id}`;
-				const data = {
-					tLo,
-					tMode,
-					tHi,
-					skipped,
-					answered:
-						hasInteracted ||
-						skipped
-				};
-				localStorage.setItem(
-					key,
-					JSON.stringify(data)
-				);
+				const data = { tLo, tMode, tHi, skipped, axisMode: Q.axisMode, answered: hasInteracted || skipped };
+				localStorage.setItem(key, JSON.stringify(data));
 			}
 
 			function loadDraft() {
@@ -1039,54 +1012,31 @@
 				if (!raw) return;
 				try {
 					const data = JSON.parse(raw);
-					if (data.skipped) {
-						skipped = true;
-						setSkippedUI(true);
-					}
-					else if (
-						data.tLo !== undefined &&
-						data.tMode !== undefined &&
-						data.tHi !== undefined
-					) {
-						tLo = data.tLo;
-						tMode = data.tMode;
-						tHi = data.tHi;
+					if (data.skipped) { skipped = true; setSkippedUI(true); }
+					else if (data.tLo !== undefined && data.tMode !== undefined && data.tHi !== undefined) {
+						tLo = data.tLo; tMode = data.tMode; tHi = data.tHi;
 						answerPreviouslySaved = !!data.answered;
 					}
-				}
-				catch (err) {
-					console.error(err);
-				}
-			}
-
-			function loadSavedAnswer(data) {
-				safeSet(data.tLo, data.tMode, data.tHi);
-				skipped = data.skipped || false;
-				answerPreviouslySaved = true;
-				updateNextButtonState();
-				refresh();
+				} catch (err) { console.error(err); }
 			}
 
 			function hideInteractionWarning() {
 				const warn = document.getElementById('interaction-warning');
-				if (warn) {
-					warn.style.display = 'none';
-				}
+				if (warn) warn.style.display = 'none';
 			}
 
 			function updateNextButtonState() {
 				const nextBtn = document.querySelector('.nav-btn.primary');
 				if (!nextBtn) return;
-				const answered =
-					hasInteracted ||
-					skipped ||
-					answerPreviouslySaved;
+				const answered = hasInteracted || skipped || answerPreviouslySaved;
 				nextBtn.classList.toggle('inactive', !answered);
 			}
 
 			/* ── skip ── */
 			function setSkippedUI(s) {
 				skipped = s;
+				updateNextButtonState();
+				hideInteractionWarning();
 				document.getElementById('slider-card').classList.toggle('dimmed', s);
 				document.getElementById('skipped-badge').classList.toggle('visible', s);
 				document.getElementById('skip-warning').classList.remove('visible');
@@ -1095,8 +1045,8 @@
 			}
 			window.onSkipClick = () => document.getElementById('skip-warning').classList.add('visible');
 			window.confirmSkip = () => setSkippedUI(true);
-			window.cancelSkip = () => document.getElementById('skip-warning').classList.remove('visible');
-			window.undoSkip = () => setSkippedUI(false);
+			window.cancelSkip  = () => document.getElementById('skip-warning').classList.remove('visible');
+			window.undoSkip    = () => setSkippedUI(false);
 
 			/* ── drag ── */
 			let dragging = null, dsMode = 0, dsLo = 0, dsHi = 0;
@@ -1131,64 +1081,60 @@
 				document.removeEventListener('pointermove', onMove);
 				document.removeEventListener('pointerup', onUp);
 			}
-			function setSkippedUI(s) {
-				skipped = s;
-				updateNextButtonState();
-				hideInteractionWarning();
-				document.getElementById('slider-card').classList.toggle('dimmed', s);
-				document.getElementById('skipped-badge').classList.toggle('visible', s);
-				document.getElementById('skip-warning').classList.remove('visible');
-				document.getElementById('skip-btn').style.display = s ? 'none' : '';
-				saveDraft();
-			}
+
 			/* ── text inputs ── */
 			function parseInp(s) { const v = parseFloat(s.replace(',', '.')); return isNaN(v) ? null : v; }
 			document.getElementById('inp-lo').addEventListener('change', function () {
-				const v = parseInp(this.value); if (v != null && v > 0) { hasInteracted = true; hideInteractionWarning(); safeSet(toT(v), tMode, tHi); refresh(); saveDraft(); }
+				const v = parseInp(this.value);
+				if (v != null && (isLog() ? v > 0 : true)) {
+					hasInteracted = true; hideInteractionWarning();
+					safeSet(toT(v), tMode, tHi); refresh(); saveDraft();
+				}
 			});
 			document.getElementById('inp-mode').addEventListener('change', function () {
-				const v = parseInp(this.value); if (v == null || v <= 0) return;
-				const nt = clampT(toT(v)), d = nt - tMode; hasInteracted = true; hideInteractionWarning();
+				const v = parseInp(this.value);
+				if (v == null || (isLog() && v <= 0)) return;
+				const nt = clampT(toT(v)), d = nt - tMode;
+				hasInteracted = true; hideInteractionWarning();
 				safeSet(tLo + d, nt, tHi + d); refresh(); saveDraft();
 			});
 			document.getElementById('inp-hi').addEventListener('change', function () {
-				const v = parseInp(this.value); if (v != null && v > 0) { hasInteracted = true; hideInteractionWarning(); safeSet(tLo, tMode, toT(v)); refresh(); saveDraft(); }
+				const v = parseInp(this.value);
+				if (v != null && (isLog() ? v > 0 : true)) {
+					hasInteracted = true; hideInteractionWarning();
+					safeSet(tLo, tMode, toT(v)); refresh(); saveDraft();
+				}
 			});
 
 			window.navigate = function (dir) {
 				const params = new URLSearchParams(location.search);
-				const currentQ =
-					parseInt(params.get('q')) || 0;
+				const currentQ = parseInt(params.get('q')) || 0;
 				const nextQ = currentQ + dir;
+				const lang = params.get('lang') || 'pt';
 
-				/* bounds protection */
-				if (nextQ < 0) {
-					return;
-				}
-				/* backwards always allowed	*/
+				/* backwards: always allowed, stop at q=0 */
 				if (dir < 0) {
+					if (nextQ < 0) return;
 					params.set('q', nextQ);
 					location.search = params.toString();
 					return;
 				}
-				/* forward validation */
-				if (
-					!hasInteracted &&
-					!skipped &&
-					!answerPreviouslySaved
-				) {
+				/* forward: require interaction */
+				if (!hasInteracted && !skipped && !answerPreviouslySaved) {
 					const warn = document.getElementById('interaction-warning');
-					if (warn) {
-						warn.style.display = 'block';
-					}
+					if (warn) warn.style.display = 'block';
 					return;
 				}
-				/* save current answer (later backend/localStorage)	*/
 				saveDraft();
-				/* navigate */
+				/* last question → go to results */
+				if (nextQ >= window._questions.length) {
+					location.href = 'results.html?lang=' + lang;
+					return;
+				}
 				params.set('q', nextQ);
 				location.search = params.toString();
 			};
+
 			window.addEventListener('resize', refresh);
 			window.addEventListener('question-loaded', () => {
 				Q = window.Q;

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sobre o Levantamento</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem}
+#wrap{width:100%;max-width:580px}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#888780;text-decoration:none;margin-bottom:2rem}
+.back-link:hover{color:#5f5e5a}
+h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
+.intro-section{margin-bottom:1.75rem}
+.intro-section h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888780;margin-bottom:.6rem}
+.intro-section p{font-size:15px;line-height:1.7;color:#3a3a38}
+.equation-box{background:#fff;border:0.5px solid #d3d1c7;border-radius:10px;padding:1.25rem;margin:1.25rem 0;font-size:15px;line-height:2;color:#1a1a18;text-align:center}
+.eq-note{font-size:12px;color:#888780;text-align:center;margin-top:.5rem}
+.steps{list-style:none;counter-reset:steps;margin-top:.6rem}
+.steps li{counter-increment:steps;display:flex;gap:.75rem;margin-bottom:.75rem;font-size:15px;line-height:1.6;color:#3a3a38}
+.steps li::before{content:counter(steps);display:flex;align-items:center;justify-content:center;min-width:24px;height:24px;background:#1a1a18;color:#f5f4f0;border-radius:50%;font-size:12px;font-weight:600;margin-top:1px;flex-shrink:0}
+.nav-row{display:flex;justify-content:flex-end;margin-top:2rem}
+.nav-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;font-size:15px;font-family:inherit;font-weight:500;background:#1a1a18;color:#f5f4f0;border:none;border-radius:8px;cursor:pointer;text-decoration:none;transition:opacity .15s}
+.nav-btn:hover{opacity:.85}
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a18;color:#f1efe8}
+  .back-link{color:#666460}.back-link:hover{color:#888780}
+  .intro-section h2{color:#666460}
+  .intro-section p,.steps li{color:#b4b2a9}
+  .equation-box{background:#242422;border-color:#3a3a37;color:#f1efe8}
+  .eq-note{color:#666460}
+  .steps li::before{background:#d4d2c8;color:#1a1a18}
+  .nav-btn{background:#d4d2c8;color:#1a1a18}
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <a class="back-link" id="back-link" href="index.html">← <span data-i18n="intro_back">Início</span></a>
+  <h1 data-i18n="intro_title">O que é este levantamento?</h1>
+
+  <div class="intro-section">
+    <h2 data-i18n="intro_eq_title">A Equação de Drake</h2>
+    <p data-i18n="intro_eq_body">Em 1961, Frank Drake propôs uma equação para estimar o número de civilizações tecnológicas detectáveis na Via Láctea.</p>
+    <div class="equation-box">
+      N = R<sub>*</sub> · f<sub>p</sub> · n<sub>e</sub> · f<sub>l</sub> · f<sub>i</sub> · f<sub>c</sub> · L
+    </div>
+    <p class="eq-note" data-i18n="intro_eq_note">N = número de civilizações detectáveis hoje na Via Láctea</p>
+  </div>
+
+  <div class="intro-section">
+    <h2 data-i18n="intro_why_title">Por que um levantamento?</h2>
+    <p data-i18n="intro_why_body">Os valores dos parâmetros são profundamente incertos e dependem de áreas do conhecimento muito distintas.</p>
+  </div>
+
+  <div class="intro-section">
+    <h2 data-i18n="intro_how_title">Como funciona</h2>
+    <ol class="steps">
+      <li data-i18n="intro_step1">Para cada parâmetro você moverá um controle deslizante que define uma distribuição de probabilidade.</li>
+      <li data-i18n="intro_step2">Ao final, sua distribuição pessoal de N será calculada.</li>
+      <li data-i18n="intro_step3">Você poderá retornar mais tarde para consultar os resultados agregados.</li>
+    </ol>
+  </div>
+
+  <div class="nav-row">
+    <a class="nav-btn" id="consent-link" href="consent.html">
+      <span data-i18n="intro_next">Continuar</span> →
+    </a>
+  </div>
+</div>
+<script>
+(async function(){
+  const supported = ['pt','en','es'];
+  const ul = new URLSearchParams(location.search).get('lang');
+  const bl = (navigator.language||'pt').slice(0,2);
+  const lang = supported.includes(ul)?ul : supported.includes(bl)?bl : 'pt';
+  document.documentElement.lang = lang==='pt'?'pt-BR':lang;
+  document.getElementById('back-link').href  = `index.html`;
+  document.getElementById('consent-link').href = `consent.html?lang=${lang}`;
+  try {
+    const S = await fetch(`/i18n/${lang}.json`).then(r=>r.json());
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.dataset.i18n; if(S[k]!==undefined) el.textContent=S[k];
+    });
+  } catch(e){ console.warn('i18n load failed, using defaults'); }
+})();
+</script>
+</body>
+</html>

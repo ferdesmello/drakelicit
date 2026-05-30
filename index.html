@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Equação de Drake — Levantamento Astrobiológico</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#f5f4f0;color:#1a1a18;
+  min-height:100vh;display:flex;justify-content:center;align-items:flex-start;
+  padding:3rem 1.25rem;
+}
+#wrap{width:100%;max-width:560px}
+.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#888780;margin-bottom:1.5rem}
+h1{font-size:28px;font-weight:600;line-height:1.2;margin-bottom:.75rem}
+.subtitle{font-size:16px;color:#5f5e5a;line-height:1.6;margin-bottom:2.5rem}
+.lang-label{font-size:13px;color:#888780;margin-bottom:.75rem}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:2.5rem}
+.lang-btn{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:16px 10px;
+  background:#fff;border:0.5px solid #d3d1c7;border-radius:10px;
+  cursor:pointer;font-family:inherit;
+  transition:border-color .15s,box-shadow .15s;
+  text-decoration:none;color:inherit;
+}
+.lang-btn:hover{border-color:#5f5e5a;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.lang-btn.selected{border-color:#1a1a18;box-shadow:0 0 0 1.5px #1a1a18}
+.lang-flag{font-size:28px;line-height:1}
+.lang-name{font-size:13px;font-weight:500;color:#1a1a18}
+.lang-native{font-size:11px;color:#888780}
+.start-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;
+  font-size:16px;font-family:inherit;font-weight:500;
+  background:#1a1a18;color:#f5f4f0;
+  border:none;border-radius:10px;cursor:pointer;
+  transition:opacity .15s;
+  text-decoration:none;
+}
+.start-btn:hover{opacity:.85}
+.footer-note{font-size:12px;color:#888780;text-align:center;margin-top:1.5rem;line-height:1.6}
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a18;color:#f1efe8}
+  .eyebrow{color:#666460}
+  .subtitle{color:#888780}
+  .lang-btn{background:#242422;border-color:#3a3a37;color:#f1efe8}
+  .lang-btn:hover{border-color:#888780}
+  .lang-btn.selected{border-color:#d4d2c8;box-shadow:0 0 0 1.5px #d4d2c8}
+  .lang-name{color:#f1efe8}
+  .lang-native{color:#666460}
+  .start-btn{background:#d4d2c8;color:#1a1a18}
+  .footer-note{color:#555450}
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <p class="eyebrow">Levantamento Astrobiológico / Astrobiological Survey</p>
+  <h1 id="landing-title">Equação de Drake</h1>
+  <p class="subtitle" id="landing-subtitle">
+    Um levantamento da comunidade científica sobre os parâmetros que determinam o número de civilizações detectáveis na Via Láctea.
+  </p>
+
+  <p class="lang-label" id="lang-label">Escolha seu idioma · Choose your language</p>
+  <div class="lang-grid">
+    <button class="lang-btn selected" data-lang="pt" onclick="selectLang('pt')">
+      <span class="lang-flag">🇧🇷</span>
+      <span class="lang-name">Português</span>
+      <span class="lang-native">Português</span>
+    </button>
+    <button class="lang-btn" data-lang="es" onclick="selectLang('es')">
+      <span class="lang-flag">🇪🇸</span>
+      <span class="lang-name">Spanish</span>
+      <span class="lang-native">Español</span>
+    </button>
+    <button class="lang-btn" data-lang="en" onclick="selectLang('en')">
+      <span class="lang-flag">🇬🇧</span>
+      <span class="lang-name">English</span>
+      <span class="lang-native">English</span>
+    </button>
+  </div>
+
+  <a class="start-btn" id="start-btn" href="intro.html?lang=pt">
+    Começar →
+  </a>
+  <p class="footer-note" id="footer-note">
+    Pesquisa acadêmica · dados anônimos · sem fins comerciais
+  </p>
+</div>
+<script>
+let selectedLang = 'pt';
+const labels = {
+  pt:{ title:'Equação de Drake', subtitle:'Um levantamento da comunidade científica sobre os parâmetros que determinam o número de civilizações detectáveis na Via Láctea.', start:'Começar →', footer:'Pesquisa acadêmica · dados anônimos · sem fins comerciais' },
+  es:{ title:'Ecuación de Drake', subtitle:'Una encuesta de la comunidad científica sobre los parámetros que determinan el número de civilizaciones detectables en la Vía Láctea.', start:'Comenzar →', footer:'Investigación académica · datos anónimos · sin fines comerciales' },
+  en:{ title:'Drake Equation', subtitle:'A survey of the scientific community on the parameters that determine the number of detectable civilisations in the Milky Way.', start:'Start →', footer:'Academic research · anonymous data · non-commercial' },
+};
+function selectLang(lang){
+  selectedLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('selected', b.dataset.lang===lang));
+  const L = labels[lang];
+  document.getElementById('landing-title').textContent = L.title;
+  document.getElementById('landing-subtitle').textContent = L.subtitle;
+  document.getElementById('start-btn').textContent = L.start;
+  document.getElementById('start-btn').href = `intro.html?lang=${lang}`;
+  document.getElementById('footer-note').textContent = L.footer;
+  document.documentElement.lang = lang==='pt'?'pt-BR':lang;
+}
+// Detect browser language on load
+const bl = (navigator.language||'pt').slice(0,2);
+if(['pt','es','en'].includes(bl)) selectLang(bl);
+</script>
+</body>
+</html>

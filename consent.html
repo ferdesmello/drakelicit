@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Termo de Consentimento</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem}
+#wrap{width:100%;max-width:580px}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#888780;text-decoration:none;margin-bottom:2rem}
+.back-link:hover{color:#5f5e5a}
+h1{font-size:22px;font-weight:600;margin-bottom:.5rem}
+.tcle-date{font-size:12px;color:#888780;margin-bottom:1.75rem}
+.section{margin-bottom:1.4rem}
+.section h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888780;margin-bottom:.5rem}
+.section p,.section li{font-size:14px;line-height:1.75;color:#3a3a38}
+.section ul{padding-left:1.1rem;margin-top:.3rem}
+.section li{margin-bottom:.2rem}
+.divider{height:0.5px;background:#d3d1c7;margin:1.5rem 0}
+.consent-box{background:#fff;border:0.5px solid #d3d1c7;border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:1.5rem}
+.consent-check{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.85rem;cursor:pointer}
+.consent-check:last-child{margin-bottom:0}
+.consent-check input[type=checkbox]{accent-color:#1a1a18;width:17px;height:17px;flex-shrink:0;margin-top:2px;cursor:pointer}
+.consent-check span{font-size:14px;line-height:1.6;color:#1a1a18;user-select:none}
+.nav-row{display:flex;align-items:center;justify-content:space-between}
+.nav-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;font-size:15px;font-family:inherit;font-weight:500;background:#1a1a18;color:#f5f4f0;border:none;border-radius:8px;cursor:pointer;text-decoration:none;transition:opacity .15s}
+.nav-btn:hover{opacity:.85}
+.nav-btn.inactive{opacity:.35;pointer-events:none}
+.consent-hint{font-size:12px;color:#888780}
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a18;color:#f1efe8}
+  .back-link,.tcle-date,.consent-hint{color:#666460}
+  .section h2{color:#666460}
+  .section p,.section li{color:#b4b2a9}
+  .consent-box{background:#242422;border-color:#3a3a37}
+  .consent-check span{color:#f1efe8}
+  .consent-check input{accent-color:#d4d2c8}
+  .divider{background:#3a3a37}
+  .nav-btn{background:#d4d2c8;color:#1a1a18}
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <a class="back-link" id="back-link" href="intro.html">← <span data-i18n="consent_back">Voltar</span></a>
+  <h1 data-i18n="consent_title">Termo de Consentimento Livre e Esclarecido</h1>
+  <p class="tcle-date" data-i18n="consent_date">Versão 1.0 · Maio 2025</p>
+
+  <div class="section">
+    <h2 data-i18n="consent_what_title">O que é esta pesquisa</h2>
+    <p data-i18n="consent_what_body">Este levantamento é conduzido por pesquisadores da [Instituição].</p>
+  </div>
+
+  <div class="section">
+    <h2 data-i18n="consent_data_title">Dados coletados</h2>
+    <ul id="data-list"></ul>
+  </div>
+
+  <div class="section">
+    <h2 data-i18n="consent_rights_title">Seus direitos</h2>
+    <ul id="rights-list"></ul>
+  </div>
+
+  <div class="section">
+    <h2 data-i18n="consent_contact_title">Contato</h2>
+    <p data-i18n="consent_contact_body">Dúvidas: pesquisa@instituicao.br.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="consent-box">
+    <label class="consent-check">
+      <input type="checkbox" id="chk1" onchange="updateBtn()"/>
+      <span data-i18n="consent_chk1">Li e compreendi as informações acima sobre esta pesquisa.</span>
+    </label>
+    <label class="consent-check">
+      <input type="checkbox" id="chk2" onchange="updateBtn()"/>
+      <span data-i18n="consent_chk2">Consinto voluntariamente em participar.</span>
+    </label>
+    <label class="consent-check">
+      <input type="checkbox" id="chk3" onchange="updateBtn()"/>
+      <span data-i18n="consent_chk3">Autorizo o uso dos meus dados de forma anônima.</span>
+    </label>
+  </div>
+
+  <div class="nav-row">
+    <span class="consent-hint" data-i18n="consent_hint">Marque todas as caixas para continuar</span>
+    <a class="nav-btn inactive" id="start-btn" href="survey_question_page.html?q=0">
+      <span data-i18n="consent_next">Iniciar levantamento</span> →
+    </a>
+  </div>
+</div>
+<script>
+let _S = {};
+const supported = ['pt','en','es'];
+const ul = new URLSearchParams(location.search).get('lang');
+const bl = (navigator.language||'pt').slice(0,2);
+const lang = supported.includes(ul)?ul : supported.includes(bl)?bl : 'pt';
+document.documentElement.lang = lang==='pt'?'pt-BR':lang;
+document.getElementById('back-link').href = `intro.html?lang=${lang}`;
+document.getElementById('start-btn').href = `survey_question_page.html?q=0&lang=${lang}`;
+
+(async function(){
+  try {
+    _S = await fetch(`/i18n/${lang}.json`).then(r=>r.json());
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.dataset.i18n; if(_S[k]!==undefined) el.textContent=_S[k];
+    });
+    /* fill bullet lists from numbered keys */
+    const dl = document.getElementById('data-list');
+    dl.innerHTML = [1,2,3,4].map(i=>_S[`consent_data_${i}`]?`<li>${_S[`consent_data_${i}`]}</li>`:'').join('');
+    const rl = document.getElementById('rights-list');
+    rl.innerHTML = [1,2,3,4].map(i=>_S[`consent_rights_${i}`]?`<li>${_S[`consent_rights_${i}`]}</li>`:'').join('');
+  } catch(e){ console.warn('i18n load failed'); }
+})();
+
+function updateBtn(){
+  const all = ['chk1','chk2','chk3'].every(id=>document.getElementById(id).checked);
+  document.getElementById('start-btn').classList.toggle('inactive', !all);
+}
+</script>
+</body>
+</html>
