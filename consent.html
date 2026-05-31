@@ -6,7 +6,8 @@
 <title>Termo de Consentimento</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem;opacity:0;transition:opacity 0.15s ease}
+body.ready{opacity:1}
 #wrap{width:100%;max-width:580px}
 .back-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#888780;text-decoration:none;margin-bottom:2rem}
 .back-link:hover{color:#5f5e5a}
@@ -112,6 +113,8 @@ document.getElementById('back-link').href = `intro.html?lang=${lang}`;
     dl.innerHTML = [1,2,3,4].map(i=>_S[`consent_data_${i}`]?`<li>${_S[`consent_data_${i}`]}</li>`:'').join('');
     const rl = document.getElementById('rights-list');
     rl.innerHTML = [1,2,3,4].map(i=>_S[`consent_rights_${i}`]?`<li>${_S[`consent_rights_${i}`]}</li>`:'').join('');
+
+  document.body.classList.add('ready');
   } catch(e){ console.warn('i18n load failed'); }
 })();
 

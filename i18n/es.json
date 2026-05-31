@@ -2,36 +2,26 @@
 	"Rs_param":"Tasa de formación estelar en nuestra galaxia",
 	"Rs_question":"¿Cuál es la tasa promedio de formación de estrellas adecuadas (estrellas/año) en nuestra galaxia?",
 	"Rs_axis":"Escala logarítmica · de 0,01 a 1000",
-
 	"fp_param":"Fracción de estrellas con planetas",
 	"fp_question":"¿Qué fracción de estrellas forman planetas?",
 	"fp_axis":"Escala logarítmica · de 0,01 a 1",
-
 	"ne_param": "número de planetas habitables por estrella",
 	"ne_question": "¿Cuál es el número promedio de planetas habitables por estrella?",
 	"ne_axis": "Escala logarítmica · de 10^-8 a 100",
-
 	"fl_param": "fracción de planetas habitables con vida",
 	"fl_question": "¿En qué fracción de planetas habitables surge alguna forma de vida?",
 	"fl_axis": "Escala logarítmica · de 10^-31 a 1",
-
 	"fi_param": "fracción de planetas habitables con vida que desarrollan inteligencia",
 	"fi_question": "¿En qué fracción de planetas habitables con vida evoluciona la inteligencia?",
 	"fi_axis": "Escala logarítmica · de 10^-20 a 1",
-
 	"fc_param":"fracción capaz de comunicación interestelar",
 	"fc_question":"¿Qué fracción de planetas con vida inteligente son capaces de comunicación interestelar?",
 	"fc_axis":"Escala logarítmica · de 10^-8 a 1",
-
 	"L_param":"vida útil de las civilizaciones detectables",
 	"L_question":"¿Durante cuántos años una civilización permanece detectable?",
 	"L_axis":"Escala logarítmica · de 10 a 10 mil millones",
-
     "progress_label":"Ecuación de Drake · encuesta astrobiológica",
-    "param_name":"fracción de estrellas con planetas",
-    "question_text":"¿Qué fracción de las estrellas tiene al menos un planeta?",
-    "axis_note":"Escala logarítmica · de 0,001 a 1",
-    "slider_hint":"El pico es el valor más probable. Las asas laterales definen su incertidumbre a cada lado.",
+	"slider_hint":"El pico es el valor más probable. Las asas laterales definen su incertidumbre a cada lado.",
     "pct10":"Percentil 10",
     "mode_label":"Moda (pico)",
     "pct90":"Percentil 90",
@@ -47,8 +37,7 @@
 	"saved":"● Borrador guardado", 
 	"median":"Mediana",
     "interaction_warning":"Mueva el control al menos un poco u omita esta pregunta.",
-  
-	"intro_back": "Inicio",
+  	"intro_back": "Inicio",
 	"intro_title": "¿Qué es esta encuesta?",
 	"intro_eq_title": "La ecuación de Drake",
 	"intro_eq_body": "En 1961, Frank Drake propuso una ecuación para estimar el número de civilizaciones tecnológicas detectables en la Vía Láctea. Multiplica siete parámetros, cada uno de los cuales representa un paso en el camino desde la formación estelar hasta la comunicación interestelar.",
@@ -60,7 +49,6 @@
 	"intro_step2": "Al final, se calculará tu distribución personal de N y podrás ver cómo se compara con la de la comunidad.",
 	"intro_step3": "Puedes volver más tarde para ver los resultados agregados a medida que respondan más participantes.",
 	"intro_next": "Continuar",
-
 	"consent_back": "Atrás",
 	"consent_title": "Formulario de consentimiento informado",
 	"consent_date": "Versión 1.0 · Mayo de 2025",
@@ -83,7 +71,6 @@
 	"consent_chk3": "Autorizo ​​el uso de mis datos de forma anónima y agregada para fines de investigación científica.",
 	"consent_hint": "Marque todas las casillas para continuar",
 	"consent_next": "Iniciar encuesta",
-
 	"results_eyebrow": "Ecuación de Drake · Estudio Astrobiológico",
 	"results_title": "Tus resultados",
 	"results_subtitle": "Basándonos en tus distribuciones, calculamos tu estimación personal de N: el número de civilizaciones detectables en la Vía Láctea actualmente.",
@@ -98,5 +85,7 @@
 	"results_comm": "<b>Los resultados de la comunidad estarán disponibles</b> Pronto.</b> A medida que más participantes respondan, podrá volver a esta página para ver cómo se compara su distribución N con la de los demás. Guarde el enlace o use su correo electrónico de inicio de sesión.",
 	"results_share": "Compartir resultados",
 	"results_redo": "Repetir encuesta",
-	"results_footer": "Gracias por su participación. Los datos recopilados contribuirán a la investigación en astrobiología."
+	"results_footer": "Gracias por su participación. Los datos recopilados contribuirán a la investigación en astrobiología.",
+	"finish": "Finalizar",
+	"back_to_intro": "Volver al principio"
 }

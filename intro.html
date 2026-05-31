@@ -6,7 +6,10 @@
 <title>Sobre o Levantamento</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem;opacity: 0;
+  transition: opacity 0.15s ease;
+}
+body.ready { opacity: 1; }
 #wrap{width:100%;max-width:580px}
 .back-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#888780;text-decoration:none;margin-bottom:2rem}
 .back-link:hover{color:#5f5e5a}
@@ -82,6 +85,8 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const k=el.dataset.i18n; if(S[k]!==undefined) el.textContent=S[k];
     });
+
+  document.body.classList.add('ready');
   } catch(e){ console.warn('i18n load failed, using defaults'); }
 })();
 </script>

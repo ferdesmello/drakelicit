@@ -2,31 +2,24 @@
   "Rs_param": "Taxa de formação de estrelas na galáxia",
   "Rs_question": "Qual é a taxa média de formação de estrelas adequadas (estrelas/ano) na Via Láctea?",
   "Rs_axis": "Escala logarítmica · de 0,01 a 1000",
-
   "fp_param": "Fração de estrelas com planetas",
   "fp_question": "Que fração das estrelas forma sistemas planetários?",
   "fp_axis": "Escala logarítmica · de 0,01 a 1",
-
   "ne_param": "Número de planetas habitáveis por estrela",
   "ne_question": "Qual é o número médio de planetas habitáveis por estrela?",
   "ne_axis": "Escala logarítmica · de 10⁻⁸ a 100",
-
   "fl_param": "Fração de planetas habitáveis com vida",
   "fl_question": "Em que fração dos planetas habitáveis surge alguma forma de vida?",
   "fl_axis": "Escala logarítmica · de 10⁻³¹ a 1",
-
   "fi_param": "Fração dos planetas com vida que desenvolvem inteligência",
   "fi_question": "Em que fração dos planetas habitáveis com vida a inteligência evolui?",
   "fi_axis": "Escala logarítmica · de 10⁻²⁰ a 1",
-
   "fc_param": "Fração capaz de comunicação interestelar",
   "fc_question": "Que fração dos planetas com vida inteligente é capaz de comunicação interestelar?",
   "fc_axis": "Escala logarítmica · de 10⁻⁸ a 1",
-
   "L_param": "Tempo de vida de civilizações detectáveis",
   "L_question": "Por quantos anos uma civilização permanece detectável?",
   "L_axis": "Escala logarítmica · de 10 a 10 bilhões",
-
   "progress_label": "Equação de Drake · levantamento astrobiológico",
   "slider_hint": "O pico é o valor mais provável. As alças laterais definem sua incerteza em cada lado.",
   "pct10": "Percentil 10",
@@ -44,7 +37,6 @@
   "saved": "● Rascunho salvo",
   "median": "Mediana",
   "interaction_warning": "Mova ao menos uma alça para continuar.",
-
   "intro_back": "Início",
   "intro_title": "O que é este levantamento?",
   "intro_eq_title": "A Equação de Drake",
@@ -57,7 +49,6 @@
   "intro_step2": "Ao final, sua distribuição pessoal de N será calculada e você poderá ver como ela se compara com a da comunidade.",
   "intro_step3": "Você poderá retornar mais tarde para consultar os resultados agregados à medida que mais participantes respondem.",
   "intro_next": "Continuar",
-
   "consent_back": "Voltar",
   "consent_title": "Termo de Consentimento Livre e Esclarecido",
   "consent_date": "Versão 1.0 · Maio 2025",
@@ -80,7 +71,6 @@
   "consent_chk3": "Autorizo o uso dos meus dados de forma anônima e agregada para fins de pesquisa científica.",
   "consent_hint": "Marque todas as caixas para continuar",
   "consent_next": "Iniciar levantamento",
-
   "results_eyebrow": "Equação de Drake · Levantamento Astrobiológico",
   "results_title": "Seus resultados",
   "results_subtitle": "Com base nas suas distribuições, calculamos a sua estimativa pessoal de N — o número de civilizações detectáveis na Via Láctea hoje.",
@@ -95,5 +85,7 @@
   "results_comm": "<b>Os resultados da comunidade estarão disponíveis em breve.</b> À medida que mais participantes respondem, você poderá retornar a esta página para ver como sua distribuição de N se compara com a dos demais. Guarde o link ou use seu e-mail de acesso.",
   "results_share": "Compartilhar resultados",
   "results_redo": "Refazer levantamento",
-  "results_footer": "Obrigado pela participação. Os dados coletados contribuirão para a pesquisa em astrobiologia."
+  "results_footer": "Obrigado pela participação. Os dados coletados contribuirão para a pesquisa em astrobiologia.",
+  "finish": "Concluir",
+  "back_to_intro": "Voltar ao início"
 }

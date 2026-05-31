@@ -6,7 +6,10 @@
 <title>Resultados — Equação de Drake</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem;opacity:0;
+  transition: opacity 0.15s ease;
+}
+body.ready { opacity: 1; }
 #wrap{width:100%;max-width:600px}
 .eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#888780;margin-bottom:1rem}
 h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
@@ -132,7 +135,15 @@ function randomNormal(){
   const bl=(navigator.language||'pt').slice(0,2);
   const lang=supported.includes(ul)?ul:supported.includes(bl)?bl:'pt';
   document.documentElement.lang=lang==='pt'?'pt-BR':lang;
-  document.getElementById('redo-btn').href=`survey_question_page.html?q=0&lang=${lang}`;
+  document.getElementById('redo-btn').onclick = function(e) {
+    e.preventDefault();
+    /* clear stored answers so the new run starts fresh */
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('drake-answer-'))
+      .forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('drake_session');
+    location.href = `consent.html?lang=${lang}`;
+  };
 
   /* ── fetch strings and questions in parallel ── */
   let S={}, questions=[], serverAnswers=null;
@@ -141,6 +152,8 @@ function randomNormal(){
       fetch(`/i18n/${lang}.json`).then(r=>r.json()),
       fetch('/questions.json').then(r=>r.json()),
     ]);
+
+  document.body.classList.add('ready');
   } catch(e){ console.warn('Failed to load i18n or questions:', e); }
 
   /* ── try loading answers from server; fall back to localStorage ── */
