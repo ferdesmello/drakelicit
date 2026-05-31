@@ -86,9 +86,9 @@ h1{font-size:22px;font-weight:600;margin-bottom:.5rem}
 
   <div class="nav-row">
     <span class="consent-hint" data-i18n="consent_hint">Marque todas as caixas para continuar</span>
-    <a class="nav-btn inactive" id="start-btn" href="survey_question_page.html?q=0">
+    <button class="nav-btn inactive" id="start-btn" onclick="startSurvey()">
       <span data-i18n="consent_next">Iniciar levantamento</span> →
-    </a>
+    </button>
   </div>
 </div>
 <script>
@@ -99,7 +99,7 @@ const bl = (navigator.language||'pt').slice(0,2);
 const lang = supported.includes(ul)?ul : supported.includes(bl)?bl : 'pt';
 document.documentElement.lang = lang==='pt'?'pt-BR':lang;
 document.getElementById('back-link').href = `intro.html?lang=${lang}`;
-document.getElementById('start-btn').href = `survey_question_page.html?q=0&lang=${lang}`;
+/* start-btn navigation is handled by startSurvey() */
 
 (async function(){
   try {
@@ -118,6 +118,31 @@ document.getElementById('start-btn').href = `survey_question_page.html?q=0&lang=
 function updateBtn(){
   const all = ['chk1','chk2','chk3'].every(id=>document.getElementById(id).checked);
   document.getElementById('start-btn').classList.toggle('inactive', !all);
+}
+
+async function startSurvey(){
+  const all = ['chk1','chk2','chk3'].every(id=>document.getElementById(id).checked);
+  if(!all) return;
+  const btn = document.getElementById('start-btn');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+  try {
+    const res = await fetch('/api/consent', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ lang, tcle_version: '1.0' })
+    });
+    if(!res.ok) throw new Error('Server error ' + res.status);
+    const { session_id } = await res.json();
+    sessionStorage.setItem('drake_session', session_id);
+    sessionStorage.setItem('drake_lang', lang);
+  } catch(e) {
+    /* If the API is unreachable (e.g. running without the server),
+       continue anyway — answers will fall back to localStorage only. */
+    console.warn('Consent API unavailable, continuing offline:', e.message);
+    sessionStorage.removeItem('drake_session');
+  }
+  location.href = `survey_question_page.html?q=0&lang=${lang}`;
 }
 </script>
 </body>

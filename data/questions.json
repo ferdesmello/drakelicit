@@ -1,7 +1,7 @@
 [
   {
     "id": "R*",
-    "number": 0,
+    "number": 1,
     "symbolHTML": "R<sub style=\"font-size:9px\">*</sub>",
     "axisMode": "log",
     "tMin": -2,
@@ -13,7 +13,7 @@
   },
   {
     "id": "fp",
-    "number": 1,
+    "number": 2,
     "symbolHTML": "f<sub style=\"font-size:9px\">p</sub>",
     "axisMode": "log",
     "tMin": -2,
@@ -25,7 +25,7 @@
   },
   {
     "id": "ne",
-    "number": 2,
+    "number": 3,
     "symbolHTML": "n<sub style=\"font-size:9px\">e</sub>",
     "axisMode": "log",
     "tMin": -8,
@@ -37,7 +37,7 @@
   },
   {
     "id": "fl",
-    "number": 3,
+    "number": 4,
     "symbolHTML": "f<sub style=\"font-size:9px\">l</sub>",
     "axisMode": "log",
     "tMin": -31,
@@ -49,7 +49,7 @@
   },
   {
     "id": "fi",
-    "number": 4,
+    "number": 5,
     "symbolHTML": "f<sub style=\"font-size:9px\">i</sub>",
     "axisMode": "log",
     "tMin": -20,
@@ -61,7 +61,7 @@
   },
   {
     "id": "fc",
-    "number": 5,
+    "number": 6,
     "symbolHTML": "f<sub style=\"font-size:9px\">c</sub>",
     "axisMode": "log",
     "tMin": -8,
@@ -73,7 +73,7 @@
   },
   {
     "id": "L",
-    "number": 6,
+    "number": 7,
     "symbolHTML": "L",
     "axisMode": "log",
     "tMin": 1,

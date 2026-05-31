@@ -602,7 +602,7 @@
 			<div class="progress-top">
 				<span class="progress-label" data-i18n="progress_label">Equação de Drake · levantamento
 					astrobiológico</span>
-				<span class="progress-count">3 / 10</span>
+				<span class="progress-count">1 / 7</span>
 			</div>
 			<div class="progress-bar">
 				<div class="progress-fill"></div>
@@ -709,7 +709,7 @@
 			});
 
 			/* questions */
-			const questions = await fetch('/data/questions.json')
+			const questions = await fetch('/questions.json')
 				.then(r => r.json());
 
 			/* later: survey.html?q=0 survey.html?q=1 etc. */
@@ -1001,9 +1001,26 @@
 			function refresh() { updateUI(); draw(); updateNextButtonState(); }
 
 			function saveDraft() {
+				/* always keep localStorage as offline fallback */
 				const key = `drake-answer-${Q.id}`;
 				const data = { tLo, tMode, tHi, skipped, axisMode: Q.axisMode, answered: hasInteracted || skipped };
 				localStorage.setItem(key, JSON.stringify(data));
+				/* also POST to server when a session exists */
+				const session_id = sessionStorage.getItem('drake_session');
+				if (!session_id) return;
+				fetch('/api/answer', {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify({
+						session_id,
+						question_id: Q.id,
+						axis_mode:   Q.axisMode,
+						t_lo:   tLo,
+						t_mode: tMode,
+						t_hi:   tHi,
+						skipped,
+					})
+				}).catch(e => console.warn('saveDraft API error:', e.message));
 			}
 
 			function loadDraft() {
@@ -1126,9 +1143,23 @@
 					return;
 				}
 				saveDraft();
-				/* last question → go to results */
+				/* last question → mark complete, then go to results */
 				if (nextQ >= window._questions.length) {
-					location.href = 'results.html?lang=' + lang;
+					const session_id = sessionStorage.getItem('drake_session');
+					const goToResults = () => {
+						const sep = session_id ? '&session=' + session_id : '';
+						location.href = 'results.html?lang=' + lang + sep;
+					};
+					if (session_id) {
+						fetch('/api/complete', {
+							method: 'POST',
+							headers: {'Content-Type': 'application/json'},
+							body: JSON.stringify({ session_id })
+						}).catch(e => console.warn('complete API error:', e.message))
+						  .finally(goToResults);
+					} else {
+						goToResults();
+					}
 					return;
 				}
 				params.set('q', nextQ);

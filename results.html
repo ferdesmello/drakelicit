@@ -135,13 +135,39 @@ function randomNormal(){
   document.getElementById('redo-btn').href=`survey_question_page.html?q=0&lang=${lang}`;
 
   /* ── fetch strings and questions in parallel ── */
-  let S={}, questions=[];
+  let S={}, questions=[], serverAnswers=null;
   try {
     [S, questions] = await Promise.all([
       fetch(`/i18n/${lang}.json`).then(r=>r.json()),
-      fetch('/data/questions.json').then(r=>r.json()),
+      fetch('/questions.json').then(r=>r.json()),
     ]);
   } catch(e){ console.warn('Failed to load i18n or questions:', e); }
+
+  /* ── try loading answers from server; fall back to localStorage ── */
+  const session_id = new URLSearchParams(location.search).get('session')
+                  || sessionStorage.getItem('drake_session');
+  if (session_id) {
+    try {
+      const res = await fetch(`/api/results/${session_id}`);
+      if (res.ok) {
+        const payload = await res.json();
+        /* index by question_id for easy lookup below */
+        serverAnswers = {};
+        (payload.answers || []).forEach(a => { serverAnswers[a.question_id] = a; });
+      }
+    } catch(e){ console.warn('Could not load results from server:', e.message); }
+  }
+
+  /* helper: get answer for a question, preferring server data */
+  function getAnswer(qid) {
+    if (serverAnswers && serverAnswers[qid]) {
+      const a = serverAnswers[qid];
+      return { tLo: a.t_lo, tMode: a.t_mode, tHi: a.t_hi,
+               skipped: a.skipped, axisMode: a.axis_mode };
+    }
+    const raw = localStorage.getItem(`drake-answer-${qid}`);
+    return raw ? JSON.parse(raw) : null;
+  }
 
   /* apply generic data-i18n strings */
   document.querySelectorAll('[data-i18n]').forEach(el=>{
@@ -163,16 +189,15 @@ function randomNormal(){
 
   questions.forEach(Q=>{
     const row=document.createElement('tr');
-    const raw=localStorage.getItem(`drake-answer-${Q.id}`);
+    const d = getAnswer(Q.id);
     const paramName = S[Q.paramKey] || Q.id;
 
-    if(!raw){
+    if(!d){
       canCompute=false;
       row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
         `<td>${paramName}</td>`+
         `<td><span class="skipped-tag">${skippedLabel}</span></td>`;
     } else {
-      const d=JSON.parse(raw);
       if(d.skipped){
         canCompute=false;
         row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
