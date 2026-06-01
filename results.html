@@ -6,20 +6,68 @@
 <title>Resultados — Equação de Drake</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;display:flex;justify-content:center;padding:2.5rem 1.25rem;opacity:0;
-  transition: opacity 0.15s ease;
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#f5f4f0;color:#1a1a18;
+  min-height:100vh;display:flex;justify-content:center;
+  padding:2.5rem 1.25rem;
+  opacity:0;transition:opacity .15s ease;
 }
-body.ready { opacity: 1; }
+body.ready{opacity:1}
+
+/* wider wrap on desktop */
 #wrap{width:100%;max-width:600px}
+@media(min-width:800px){#wrap{max-width:820px}}
+@media(min-width:1100px){#wrap{max-width:960px}}
+
 .eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#888780;margin-bottom:1rem}
 h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
 .subtitle{font-size:15px;color:#5f5e5a;line-height:1.6;margin-bottom:2rem}
+
+/* cards */
 .result-card{background:#fff;border:0.5px solid #d3d1c7;border-radius:12px;padding:1.4rem;margin-bottom:1.25rem}
 .result-card h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888780;margin-bottom:.75rem}
-.n-display{text-align:center;padding:.75rem 0 1rem}
-.n-range{font-size:13px;color:#888780;margin-top:.4rem;text-align:center}
-#n-canvas-wrap{width:100%;height:140px;margin:.75rem 0}
-#n-canvas{width:100%;height:140px;display:block}
+
+/* stats row — same weight as everything else, no big number */
+.stats-row{
+  display:flex;gap:1.4rem;flex-wrap:wrap;
+  font-size:13px;color:#888780;
+  margin-bottom:.85rem;padding-bottom:.85rem;
+  border-bottom:0.5px solid #ebe9e0;
+}
+.stats-row span b{font-weight:500;color:#5f5e5a;font-family:monospace}
+
+/* canvas */
+.canvas-wrap{position:relative;width:100%;height:220px;margin-bottom:.6rem}
+.canvas-wrap canvas{width:100%;height:100%;display:block}
+
+/* legend */
+.legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:12px;color:#888780;margin-bottom:.75rem}
+.legend-item{display:flex;align-items:center;gap:5px}
+.swatch-line{width:26px;height:3px;border-radius:2px;flex-shrink:0}
+.swatch-line.your{background:rgba(20,140,90,.85)}
+.swatch-line.comm{background:rgba(180,80,40,.8)}
+.swatch-dash{width:26px;height:0;flex-shrink:0}
+.swatch-dash.mw  {border-top:2.5px dashed rgba(180,110,20,.85)}
+.swatch-dash.univ{border-top:2.5px dashed rgba(50,80,180,.85)}
+
+/* probability table */
+.prob-table{width:100%;border-collapse:collapse;margin-top:.25rem;margin-bottom:.5rem}
+.prob-table td{font-size:12px;padding:6px 8px;vertical-align:middle;border-top:0.5px solid #ebe9e0}
+.prob-table tr:first-child td{border-top:none}
+.prob-label{color:#5f5e5a;line-height:1.5}
+.prob-value{text-align:right;font-family:monospace;font-size:13px;font-weight:500;white-space:nowrap}
+.color-not-alone-mw {color:#1a8a50}
+.color-alone-mw     {color:#a06010}
+.color-alone-univ   {color:#3050a0}
+
+/* mc note */
+.mc-note{font-size:11px;color:#888780;text-align:center;margin-top:.35rem;line-height:1.5}
+
+/* community note */
+.community-note{font-size:13px;color:#888780;font-style:italic;text-align:center;padding:.4rem 0}
+
+/* param table */
 .param-table{width:100%;border-collapse:collapse;margin-top:.25rem}
 .param-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#888780;font-weight:500;text-align:left;padding:0 0 6px}
 .param-table th:last-child{text-align:right}
@@ -27,10 +75,8 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
 .param-table td:last-child{text-align:right;font-family:monospace;font-size:12px;color:#5f5e5a}
 .param-sym{font-family:monospace;font-size:12px;color:#888780;width:28px}
 .skipped-tag{font-size:10px;color:#ba7517;background:#faeeda;padding:2px 7px;border-radius:4px}
-.community-card{background:#f1efe8;border:0.5px solid #d3d1c7;border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:1.25rem;display:flex;gap:.9rem;align-items:flex-start}
-.comm-icon{font-size:22px;flex-shrink:0;margin-top:1px}
-.comm-text{font-size:14px;color:#5f5e5a;line-height:1.65}
-.comm-text b{font-weight:500;color:#1a1a18}
+
+/* actions */
 .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem}
 .action-btn{flex:1;min-width:140px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;font-size:14px;font-family:inherit;border-radius:8px;cursor:pointer;text-decoration:none;transition:opacity .12s}
 .action-btn.primary{background:#1a1a18;color:#f5f4f0;border:none;font-weight:500}
@@ -38,18 +84,27 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
 .action-btn.secondary{background:transparent;border:0.5px solid #b4b2a9;color:#1a1a18}
 .action-btn.secondary:hover{background:#f1efe8}
 .footer-note{font-size:12px;color:#888780;text-align:center;line-height:1.6}
+
 @media(prefers-color-scheme:dark){
   body{background:#1a1a18;color:#f1efe8}
   .eyebrow{color:#666460}.subtitle{color:#888780}
+  .legend{color:#666460}.mc-note{color:#666460}.community-note{color:#666460}
   .result-card{background:#242422;border-color:#3a3a37}
-  .result-card h2{color:#666460}.n-range{color:#888780}
+  .result-card h2{color:#666460}
+  .stats-row{color:#666460;border-color:#3a3a37}
+  .stats-row span b{color:#888780}
+  .prob-table td{border-color:#3a3a37}
+  .prob-label{color:#888780}
+  .color-not-alone-mw{color:#30c070}
+  .color-alone-mw    {color:#d4a040}
+  .color-alone-univ  {color:#7090e0}
+  .swatch-dash.mw  {border-top-color:rgba(210,160,50,.85)}
+  .swatch-dash.univ{border-top-color:rgba(110,140,230,.85)}
   .param-table th{color:#666460}
   .param-table td{color:#f1efe8;border-color:#3a3a37}
   .param-table td:last-child{color:#888780}
   .param-sym{color:#666460}
   .skipped-tag{background:#2e1800;color:#fac775}
-  .community-card{background:#2a2a28;border-color:#3a3a37}
-  .comm-text{color:#888780}.comm-text b{color:#f1efe8}
   .action-btn.primary{background:#d4d2c8;color:#1a1a18}
   .action-btn.secondary{border-color:#444441;color:#f1efe8}
   .action-btn.secondary:hover{background:#333330}
@@ -63,16 +118,66 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
   <h1 data-i18n="results_title">Seus resultados</h1>
   <p class="subtitle" data-i18n="results_subtitle">Com base nas suas distribuições, calculamos a sua estimativa pessoal de N.</p>
 
+  <!-- N distribution card -->
   <div class="result-card">
     <h2 data-i18n="results_your_n">Sua distribuição de N</h2>
-    <div class="n-display">
-      <div style="font-size:42px;font-weight:300;letter-spacing:-.02em" id="n-mode-display">…</div>
-      <div class="n-range" id="n-range-display"></div>
+
+    <!-- stats — same visual weight, no dominant number -->
+    <div class="stats-row" id="stats-row">
+      <span><span data-i18n="results_stats_median">Mediana</span>: <b id="stat-median">—</b></span>
+      <span><span data-i18n="results_stats_iqr">IQR</span>: <b id="stat-iqr">—</b></span>
+      <span><span data-i18n="results_stats_90">Intervalo 90%</span>: <b id="stat-90">—</b></span>
     </div>
-    <div id="n-canvas-wrap"><canvas id="n-canvas" role="img" aria-label="Distribuição de N"></canvas></div>
-    <p style="font-size:12px;color:#888780;text-align:center" data-i18n="results_mc_note">Distribuição calculada por simulação de Monte Carlo (10 000 amostras)</p>
+
+    <!-- legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="swatch-line your"></div>
+        <span data-i18n="results_your_curve">Sua distribuição</span>
+      </div>
+      <div class="legend-item" id="comm-legend-item" style="display:none">
+        <div class="swatch-line comm"></div>
+        <span data-i18n="results_comm_curve">Comunidade</span>
+      </div>
+      <div class="legend-item">
+        <div class="swatch-dash mw"></div>
+        <span data-i18n="results_ref_n1_label">N = 1</span>
+      </div>
+      <div class="legend-item">
+        <div class="swatch-dash univ"></div>
+        <span data-i18n="results_ref_nu_label">N = 5×10⁻¹³</span>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="n-canvas-wrap">
+      <canvas id="n-canvas" role="img" aria-label="Distribuição de N"></canvas>
+    </div>
+
+    <!-- three probability rows -->
+    <table class="prob-table">
+      <tr>
+        <td class="prob-label" data-i18n="results_p_not_alone_mw">P(não sozinhos na Via Láctea) — área à direita de N = 1</td>
+        <td class="prob-value color-not-alone-mw" id="prob-not-alone-mw">—</td>
+      </tr>
+      <tr>
+        <td class="prob-label" data-i18n="results_p_alone_mw">P(sozinhos na Via Láctea) — área à esquerda de N = 1</td>
+        <td class="prob-value color-alone-mw" id="prob-alone-mw">—</td>
+      </tr>
+      <tr>
+        <td class="prob-label" data-i18n="results_p_alone_univ">P(sozinhos no universo observável) — área à esquerda de N = 5×10⁻¹³</td>
+        <td class="prob-value color-alone-univ" id="prob-alone-univ">—</td>
+      </tr>
+    </table>
+
+    <p class="mc-note" data-i18n="results_mc_note">Distribuição calculada por Monte Carlo (50 000 amostras) · curva suavizada por KDE</p>
   </div>
 
+  <!-- community note: shown when community curve absent -->
+  <div class="result-card" id="comm-note-card">
+    <p class="community-note" data-i18n="results_comm_few">Ainda há poucas respostas para exibir a distribuição da comunidade. Volte mais tarde.</p>
+  </div>
+
+  <!-- param summary -->
   <div class="result-card">
     <h2 data-i18n="results_summary">Resumo dos seus parâmetros</h2>
     <table class="param-table">
@@ -87,240 +192,278 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
     </table>
   </div>
 
-  <div class="community-card">
-    <span class="comm-icon">🔭</span>
-    <p class="comm-text" id="comm-text" data-i18n="results_comm">Os resultados da comunidade estarão disponíveis em breve.</p>
-  </div>
-
+  <!-- actions -->
   <div class="action-row">
     <a class="action-btn primary" id="share-btn" href="#">↗ <span data-i18n="results_share">Compartilhar resultados</span></a>
-    <a class="action-btn secondary" id="redo-btn" href="survey_question_page.html?q=0">↺ <span data-i18n="results_redo">Refazer levantamento</span></a>
+    <a class="action-btn secondary" id="redo-btn" href="#">↺ <span data-i18n="results_redo">Refazer levantamento</span></a>
   </div>
   <p class="footer-note" data-i18n="results_footer">Obrigado pela participação.</p>
 </div>
+
 <script>
-/* ── shared tick helpers (same as survey page) ── */
+/* ── tick helpers ── */
 function superscript(n){
   const map={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
   return String(n).split('').map(c=>map[c]||c).join('');
 }
 function formatLogTick(e){
-  if(e===-3) return '0.001'; if(e===-2) return '0.01'; if(e===-1) return '0.1';
-  if(e===0)  return '1';     if(e===1)  return '10';   if(e===2)  return '100';
-  if(e===3)  return '1000';
-  return '10'+superscript(e);
+  if(e===-3)return'0.001';if(e===-2)return'0.01';if(e===-1)return'0.1';
+  if(e===0)return'1';if(e===1)return'10';if(e===2)return'100';if(e===3)return'1000';
+  return'10'+superscript(e);
 }
-
 function fmtV(v){
-  if(!isFinite(v)||v===0) return '—';
+  if(!isFinite(v)||v===0)return'—';
   const a=Math.abs(v);
-  if(a>=1e4||(a>0&&a<0.01)) return v.toExponential(1).replace('e+','e');
-  if(a>=100) return v.toFixed(0);
-  if(a>=10)  return v.toFixed(1);
-  if(a>=1)   return v.toFixed(2);
-  if(a>=0.1) return v.toFixed(3);
+  if(a>=1e4||(a>0&&a<0.01))return v.toExponential(1).replace('e+','e');
+  if(a>=100)return v.toFixed(0);if(a>=10)return v.toFixed(1);
+  if(a>=1)return v.toFixed(2);if(a>=0.1)return v.toFixed(3);
   return v.toFixed(4);
 }
-
-function randomNormal(){
-  let u=0,v=0;
-  while(u===0) u=Math.random();
-  while(v===0) v=Math.random();
-  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+function fmtPct(p){
+  if(p===null||!isFinite(p))return'—';
+  if(p>=0.9995)return'>99.9%';
+  if(p<=0.0005)return'<0.1%';
+  return(p*100).toFixed(1)+'%';
 }
 
+/* ── numerical integration of discrete PDF ── */
+function integratePDF(grid, pdf, tLo, tHi){
+  let sum=0;
+  for(let i=0;i<grid.length-1;i++){
+    const t0=grid[i],t1=grid[i+1];
+    if(t1<=tLo||t0>=tHi) continue;
+    const lo=Math.max(t0,tLo),hi=Math.min(t1,tHi);
+    const frac=(hi-lo)/(t1-t0);
+    sum+=0.5*(pdf[i]+pdf[i+1])*(t1-t0)*frac;
+  }
+  return sum;
+}
+function probAbove(dist,logT){ return integratePDF(dist.log_N_grid,dist.pdf,logT,Infinity)/Math.max(1e-30,integratePDF(dist.log_N_grid,dist.pdf,-Infinity,Infinity)); }
+function probBelow(dist,logT){ return integratePDF(dist.log_N_grid,dist.pdf,-Infinity,logT)/Math.max(1e-30,integratePDF(dist.log_N_grid,dist.pdf,-Infinity,Infinity)); }
+
+/* ── draw chart ── */
+function drawChart(yourDist, commDist){
+  const canvas=document.getElementById('n-canvas');
+  const wrap  =document.getElementById('n-canvas-wrap');
+  const dpr   =window.devicePixelRatio||1;
+  const cssW  =wrap.clientWidth, cssH=220;
+  canvas.style.width=cssW+'px'; canvas.style.height=cssH+'px';
+  canvas.width=Math.round(cssW*dpr); canvas.height=Math.round(cssH*dpr);
+
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  /* extra bottom padding to fit axis label */
+  const PAD={top:10*dpr, right:14*dpr, bottom:42*dpr, left:14*dpr};
+  const pw=W-PAD.left-PAD.right, ph=H-PAD.top-PAD.bottom;
+
+  const REF_MW  =0;
+  const REF_UNIV=Math.log10(5e-13);  /* ≈ -12.301 */
+
+  /* x-axis range: data + both ref lines */
+  const grids=[yourDist.log_N_grid];
+  if(commDist) grids.push(commDist.log_N_grid);
+  const allT=grids.flat();
+  const tMin=Math.min(Math.min(...allT), REF_UNIV-1);
+  const tMax=Math.max(Math.max(...allT), REF_MW+1);
+  const tSpan=tMax-tMin;
+
+  function xpx(t){ return PAD.left+((t-tMin)/tSpan)*pw; }
+  function ypxF(y,ymax){ return PAD.top+ph-(Math.min(y,ymax)/ymax)*ph; }
+
+  function maxInRange(dist){
+    let m=0;
+    dist.log_N_grid.forEach((t,i)=>{ if(t>=tMin&&t<=tMax&&dist.pdf[i]>m) m=dist.pdf[i]; });
+    return m;
+  }
+  let ymax=maxInRange(yourDist);
+  if(commDist) ymax=Math.max(ymax,maxInRange(commDist));
+  if(ymax===0) ymax=1;
+  ymax*=1.18;
+
+  function drawCurve(dist, cFill, cStroke){
+    const g=dist.log_N_grid, p=dist.pdf;
+    ctx.beginPath(); ctx.moveTo(xpx(g[0]),ypxF(0,ymax));
+    for(let i=0;i<g.length;i++) ctx.lineTo(xpx(g[i]),ypxF(p[i],ymax));
+    ctx.lineTo(xpx(g[g.length-1]),ypxF(0,ymax));
+    ctx.closePath(); ctx.fillStyle=cFill; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xpx(g[0]),ypxF(p[0],ymax));
+    for(let i=1;i<g.length;i++) ctx.lineTo(xpx(g[i]),ypxF(p[i],ymax));
+    ctx.strokeStyle=cStroke; ctx.lineWidth=1.8*dpr; ctx.stroke();
+  }
+
+  /* community (reddish) behind, user (greenish) in front */
+  if(commDist){
+    drawCurve(commDist,
+      dark?'rgba(200,80,40,.22)':'rgba(180,60,20,.18)',
+      dark?'rgba(210,90,50,.88)':'rgba(170,55,20,.82)');
+  }
+  drawCurve(yourDist,
+    dark?'rgba(30,170,110,.28)':'rgba(20,150,90,.22)',
+    dark?'rgba(30,190,120,.92)':'rgba(15,140,80,.88)');
+
+  /* ── reference lines ── */
+  function drawRefLine(t, color, label){
+    const px=xpx(t);
+    if(px<PAD.left-2||px>W-PAD.right+2) return;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(px,PAD.top); ctx.lineTo(px,PAD.top+ph);
+    ctx.strokeStyle=color; ctx.lineWidth=1.5*dpr;
+    ctx.setLineDash([4*dpr,3*dpr]); ctx.stroke(); ctx.setLineDash([]);
+    const fPx=Math.max(9,Math.round(9*dpr));
+    ctx.font=`500 ${fPx}px system-ui,-apple-system,sans-serif`;
+    ctx.fillStyle=color; ctx.textBaseline='bottom'; ctx.textAlign='left';
+    ctx.fillText(label, px+3*dpr, PAD.top+ph-2*dpr);
+    ctx.restore();
+  }
+  drawRefLine(REF_MW,
+    dark?'rgba(215,155,50,.92)':'rgba(175,110,20,.88)',
+    'N=1');
+  drawRefLine(REF_UNIV,
+    dark?'rgba(110,140,225,.92)':'rgba(50,80,180,.88)',
+    'N=5×10⁻¹³');
+
+  /* ── axis line ── */
+  const cAx=dark?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)';
+  ctx.beginPath();
+  ctx.moveTo(PAD.left,PAD.top+ph); ctx.lineTo(PAD.left+pw,PAD.top+ph);
+  ctx.strokeStyle=cAx; ctx.lineWidth=dpr; ctx.stroke();
+
+  /* ── tick labels ── */
+  const fPx=Math.max(10,Math.round(10.5*dpr));
+  const cTxt=dark?'rgba(255,255,255,.38)':'rgba(0,0,0,.38)';
+  ctx.fillStyle=cTxt;
+  ctx.font=`${fPx}px system-ui,-apple-system,sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const tickY=PAD.top+ph+4*dpr;
+  const range=Math.ceil(tMax)-Math.floor(tMin);
+  const step=range<=10?1:range<=20?2:range<=50?5:10;
+  const minGap=34*dpr;
+  let lastPx=-Infinity;
+  for(let e=Math.floor(tMin);e<=Math.ceil(tMax);e+=step){
+    const px=xpx(e);
+    if(px-lastPx<minGap||px<PAD.left||px>W-PAD.right) continue;
+    lastPx=px;
+    ctx.fillText(formatLogTick(e),px,tickY);
+    ctx.beginPath(); ctx.moveTo(px,PAD.top+ph); ctx.lineTo(px,PAD.top+ph+3*dpr);
+    ctx.strokeStyle=cAx; ctx.lineWidth=dpr; ctx.stroke();
+  }
+
+  /* ── x-axis label "N" centred below ticks ── */
+  const labelFPx=Math.max(11,Math.round(11*dpr));
+  ctx.font=`italic ${labelFPx}px system-ui,-apple-system,sans-serif`;
+  ctx.fillStyle=cTxt; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('N  (escala log₁₀)', PAD.left+pw/2, H-2*dpr);
+}
+
+/* ── main async block ── */
 (async function(){
   const supported=['pt','en','es'];
-  const ul=new URLSearchParams(location.search).get('lang');
-  const bl=(navigator.language||'pt').slice(0,2);
+  const qp=new URLSearchParams(location.search);
+  const ul=qp.get('lang'), bl=(navigator.language||'pt').slice(0,2);
   const lang=supported.includes(ul)?ul:supported.includes(bl)?bl:'pt';
   document.documentElement.lang=lang==='pt'?'pt-BR':lang;
-  document.getElementById('redo-btn').onclick = function(e) {
+
+  document.getElementById('redo-btn').onclick=function(e){
     e.preventDefault();
-    /* clear stored answers so the new run starts fresh */
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('drake-answer-'))
-      .forEach(k => localStorage.removeItem(k));
+    Object.keys(localStorage).filter(k=>k.startsWith('drake-answer-')).forEach(k=>localStorage.removeItem(k));
     sessionStorage.removeItem('drake_session');
-    location.href = `consent.html?lang=${lang}`;
+    location.href=`consent.html?lang=${lang}`;
   };
 
-  /* ── fetch strings and questions in parallel ── */
-  let S={}, questions=[], serverAnswers=null;
-  try {
-    [S, questions] = await Promise.all([
-      fetch(`/i18n/${lang}.json`).then(r=>r.json()),
-      fetch('/questions.json').then(r=>r.json()),
-    ]);
+  const session_id=qp.get('session')||sessionStorage.getItem('drake_session');
+  const fetches=[
+    fetch(`/i18n/${lang}.json`).then(r=>r.json()).catch(()=>({})),
+    fetch('/questions.json').then(r=>r.json()).catch(()=>[]),
+    session_id
+      ? fetch(`/api/results/${session_id}/computed`).then(r=>r.ok?r.json():null).catch(()=>null)
+      : Promise.resolve(null),
+    fetch('/api/aggregate/computed').then(r=>r.ok?r.json():null).catch(()=>null),
+  ];
+  let S={}, questions=[], individualN=null, communityData=null;
+  [S,questions,individualN,communityData]=await Promise.all(fetches);
 
-  document.body.classList.add('ready');
-  } catch(e){ console.warn('Failed to load i18n or questions:', e); }
-
-  /* ── try loading answers from server; fall back to localStorage ── */
-  const session_id = new URLSearchParams(location.search).get('session')
-                  || sessionStorage.getItem('drake_session');
-  if (session_id) {
-    try {
-      const res = await fetch(`/api/results/${session_id}`);
-      if (res.ok) {
-        const payload = await res.json();
-        /* index by question_id for easy lookup below */
-        serverAnswers = {};
-        (payload.answers || []).forEach(a => { serverAnswers[a.question_id] = a; });
-      }
-    } catch(e){ console.warn('Could not load results from server:', e.message); }
-  }
-
-  /* helper: get answer for a question, preferring server data */
-  function getAnswer(qid) {
-    if (serverAnswers && serverAnswers[qid]) {
-      const a = serverAnswers[qid];
-      return { tLo: a.t_lo, tMode: a.t_mode, tHi: a.t_hi,
-               skipped: a.skipped, axisMode: a.axis_mode };
-    }
-    const raw = localStorage.getItem(`drake-answer-${qid}`);
-    return raw ? JSON.parse(raw) : null;
-  }
-
-  /* apply generic data-i18n strings */
+  /* i18n */
   document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const k=el.dataset.i18n;
-    if(S[k]!==undefined){
-      /* results_comm may contain HTML (<b>) — use innerHTML for it */
-      if(k==='results_comm') el.innerHTML=S[k];
-      else el.textContent=S[k];
-    }
+    const k=el.dataset.i18n; if(S[k]!==undefined) el.textContent=S[k];
   });
+  document.body.classList.add('ready');
 
-  const skippedLabel = S.results_skipped || 'pulado';
-  const Z90=1.2816, SIG_MIN=0.02, MC=10000;
+  /* ── individual N ── */
+  const yourDist=individualN?.N_distribution;
+  const Z90=1.2816, SIG_MIN=0.02;
+  const REF_MW=0, REF_UNIV=Math.log10(5e-13);
 
-  /* ── build param table and Monte Carlo samples ── */
+  if(yourDist&&!yourDist.error){
+    document.getElementById('stat-median').textContent = fmtV(yourDist.N_median);
+    document.getElementById('stat-iqr').textContent    =
+      `[${fmtV(yourDist.N_q25)}, ${fmtV(yourDist.N_q75)}]`;
+    document.getElementById('stat-90').textContent     =
+      `[${fmtV(yourDist.N_q05)}, ${fmtV(yourDist.N_q95)}]`;
+
+    const pNotAloneMW = probAbove(yourDist, REF_MW);
+    const pAloneMW    = probBelow(yourDist, REF_MW);
+    const pAloneUniv  = probBelow(yourDist, REF_UNIV);
+
+    document.getElementById('prob-not-alone-mw').textContent = fmtPct(pNotAloneMW);
+    document.getElementById('prob-alone-mw').textContent     = fmtPct(pAloneMW);
+    document.getElementById('prob-alone-univ').textContent   = fmtPct(pAloneUniv);
+  } else {
+    const reason=yourDist?.error||(S.results_n_na_reason||'Uma ou mais perguntas foram puladas');
+    document.getElementById('stat-median').textContent=S.results_n_na||'N/A';
+    document.getElementById('stat-iqr').textContent=reason;
+  }
+
+  /* ── community ── */
+  const MIN_SESSIONS=3;
+  let commDist=null;
+  if(communityData?.community_N&&!communityData.community_N.error
+     &&communityData.n_sessions>=MIN_SESSIONS){
+    commDist=communityData.community_N;
+    document.getElementById('comm-legend-item').style.display='';
+    document.getElementById('comm-note-card').style.display='none';
+  }
+
+  /* ── chart ── */
+  if(yourDist&&!yourDist.error){
+    drawChart(yourDist,commDist);
+    window.addEventListener('resize',()=>drawChart(yourDist,commDist));
+  }
+
+  /* ── param table ── */
   const tbody=document.getElementById('param-tbody');
-  const allSamples=[];
-  let canCompute=true;
-
+  const skippedLabel=S.results_skipped||'pulado';
+  const serverAnswers={};
+  if(individualN?.answers) individualN.answers.forEach(a=>{serverAnswers[a.question_id]=a;});
+  function getAnswer(qid){
+    if(serverAnswers[qid]){const a=serverAnswers[qid];return{tLo:a.t_lo,tMode:a.t_mode,tHi:a.t_hi,skipped:a.skipped,axisMode:a.axis_mode};}
+    const raw=localStorage.getItem(`drake-answer-${qid}`);
+    return raw?JSON.parse(raw):null;
+  }
   questions.forEach(Q=>{
     const row=document.createElement('tr');
-    const d = getAnswer(Q.id);
-    const paramName = S[Q.paramKey] || Q.id;
-
-    if(!d){
-      canCompute=false;
+    const d=getAnswer(Q.id);
+    const paramName=S[Q.paramKey]||Q.id;
+    if(!d||d.skipped){
       row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
         `<td>${paramName}</td>`+
         `<td><span class="skipped-tag">${skippedLabel}</span></td>`;
     } else {
-      if(d.skipped){
-        canCompute=false;
-        row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
-          `<td>${paramName}</td>`+
-          `<td><span class="skipped-tag">${skippedLabel}</span></td>`;
-      } else {
-        const isLog = Q.axisMode !== 'lin';
-        /* mode and IQR in original value space */
-        const modeVal = isLog ? Math.pow(10,d.tMode) : d.tMode;
-        const q25T    = d.tMode - 0.6745*Math.max(SIG_MIN,(d.tMode-d.tLo)/Z90);
-        const q75T    = d.tMode + 0.6745*Math.max(SIG_MIN,(d.tHi-d.tMode)/Z90);
-        const q25Val  = isLog ? Math.pow(10,q25T) : q25T;
-        const q75Val  = isLog ? Math.pow(10,q75T) : q75T;
-
-        row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
-          `<td>${paramName}</td>`+
-          `<td>${fmtV(modeVal)} · [${fmtV(q25Val)}, ${fmtV(q75Val)}]</td>`;
-
-        /* Monte Carlo samples for this parameter */
-        const qSamples=[];
-        for(let i=0;i<MC;i++){
-          const u=Math.random();
-          const tSample = u<0.5
-            ? d.tMode - Math.abs(randomNormal())*Math.max(SIG_MIN,(d.tMode-d.tLo)/Z90)
-            : d.tMode + Math.abs(randomNormal())*Math.max(SIG_MIN,(d.tHi-d.tMode)/Z90);
-          /* convert sample back to value space */
-          qSamples.push(isLog ? Math.pow(10,tSample) : tSample);
-        }
-        allSamples.push(qSamples);
-      }
+      const isLog=Q.axisMode!=='lin';
+      const modeVal=isLog?Math.pow(10,d.tMode):d.tMode;
+      const q25T=d.tMode-0.6745*Math.max(SIG_MIN,(d.tMode-d.tLo)/Z90);
+      const q75T=d.tMode+0.6745*Math.max(SIG_MIN,(d.tHi-d.tMode)/Z90);
+      const q25Val=isLog?Math.pow(10,q25T):q25T;
+      const q75Val=isLog?Math.pow(10,q75T):q75T;
+      row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
+        `<td>${paramName}</td>`+
+        `<td>${fmtV(modeVal)} · [${fmtV(q25Val)}, ${fmtV(q75Val)}]</td>`;
     }
     tbody.appendChild(row);
   });
-
-  /* ── compute N distribution ── */
-  if(canCompute && allSamples.length===questions.length){
-    const Nsamples=[];
-    for(let i=0;i<MC;i++){
-      let n=1; allSamples.forEach(s=>n*=s[i]); Nsamples.push(n);
-    }
-    const logN=Nsamples.filter(v=>v>0).map(v=>Math.log10(v));
-    logN.sort((a,b)=>a-b);
-    const pct=p=>logN[Math.floor(logN.length*p)];
-    document.getElementById('n-mode-display').textContent=`N ~ ${fmtV(Math.pow(10,pct(0.5)))}`;
-    document.getElementById('n-range-display').textContent=
-      `IQR: [${fmtV(Math.pow(10,pct(0.25)))}, ${fmtV(Math.pow(10,pct(0.75)))}]`+
-      `  ·  90%: [${fmtV(Math.pow(10,pct(0.05)))}, ${fmtV(Math.pow(10,pct(0.95)))}]`;
-    drawNHist(logN);
-  } else {
-    document.getElementById('n-mode-display').textContent = S.results_n_na||'N/A';
-    document.getElementById('n-range-display').textContent = S.results_n_na_reason||'Uma ou mais perguntas foram puladas';
-  }
 })();
-
-function drawNHist(logN){
-  const canvas=document.getElementById('n-canvas');
-  const wrap=document.getElementById('n-canvas-wrap');
-  const dpr=window.devicePixelRatio||1;
-  canvas.width=Math.round(wrap.clientWidth*dpr);
-  canvas.height=Math.round(140*dpr);
-  canvas.style.width=wrap.clientWidth+'px';
-  canvas.style.height='140px';
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height;
-  const dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  const cBar=dark?'rgba(200,160,100,.65)':'rgba(140,84,28,.55)';
-  const cAx =dark?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)';
-  const cTxt=dark?'rgba(255,255,255,.40)':'rgba(0,0,0,.38)';
-  const pad={top:8*dpr, right:10*dpr, bottom:24*dpr, left:10*dpr};
-  const pw=W-pad.left-pad.right, ph=H-pad.top-pad.bottom;
-
-  const mn=Math.floor(Math.min(...logN)), mx=Math.ceil(Math.max(...logN));
-  const range=Math.max(1,mx-mn);
-  const bins=Math.min(60, range*8);
-  const bw=range/bins;
-  const counts=new Array(bins).fill(0);
-  logN.forEach(v=>{ const bi=Math.min(bins-1,Math.floor((v-mn)/bw)); if(bi>=0) counts[bi]++; });
-  const cmax=Math.max(1,...counts);
-
-  function xpx(t){ return pad.left+((t-mn)/range)*pw; }
-  function ypx(c){ return pad.top+ph-(c/cmax)*ph; }
-
-  counts.forEach((c,i)=>{
-    const x=xpx(mn+i*bw), x2=xpx(mn+(i+1)*bw);
-    ctx.fillStyle=cBar;
-    ctx.fillRect(x, ypx(c), Math.max(1,x2-x-1), ph-(ypx(c)-pad.top));
-  });
-
-  /* axis */
-  ctx.beginPath();
-  ctx.moveTo(pad.left,pad.top+ph); ctx.lineTo(pad.left+pw,pad.top+ph);
-  ctx.strokeStyle=cAx; ctx.lineWidth=dpr; ctx.stroke();
-
-  /* tick labels — use same superscript/formatLogTick as survey page */
-  const fPx=Math.max(10,Math.round(10*dpr));
-  ctx.fillStyle=cTxt;
-  ctx.font=`${fPx}px system-ui,-apple-system,sans-serif`;
-  ctx.textAlign='center'; ctx.textBaseline='top';
-  const tickY=pad.top+ph+4*dpr;
-  const minGap=32*dpr;
-  let lastPx=-Infinity;
-  for(let e=Math.ceil(mn); e<=Math.floor(mx); e++){
-    const px=xpx(e);
-    if(px-lastPx<minGap) continue;
-    lastPx=px;
-    ctx.fillText(formatLogTick(e), px, tickY);
-    ctx.beginPath(); ctx.moveTo(px,pad.top+ph); ctx.lineTo(px,pad.top+ph+3*dpr);
-    ctx.strokeStyle=cAx; ctx.lineWidth=dpr; ctx.stroke();
-  }
-}
 </script>
 </body>
 </html>

@@ -30,11 +30,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from compute import compute_all, compute_individual_N
 
 # ── paths ──────────────────────────────────────────────────────────────────
 HERE       = Path(__file__).parent          # .../backend/
 STATIC_DIR = HERE.parent                    # .../drake-survey/
-DATA_FILE  = HERE / "data.json"             # simple JSON store
+DATA_FILE       = HERE / "data.json"        # simple JSON store
+QUESTIONS_FILE  = STATIC_DIR / "questions.json"
 
 app = FastAPI(title="Drake Survey API", version="0.1.0")
 
@@ -185,6 +187,46 @@ async def health():
         "sessions": len(data.get("sessions", {})),
         "answers":  len(data.get("answers",  [])),
     }
+
+
+# ── Computation endpoints ─────────────────────────────────────────────────
+
+@app.get("/api/aggregate/computed", tags=["results"])
+async def get_aggregate_computed():
+    """
+    Compute and return community PDFs for every parameter plus
+    the community N distribution.  Only completed sessions are included.
+    Results are computed fresh on each request (add caching later if needed).
+    """
+    if not DATA_FILE.exists():
+        return {"n_sessions": 0, "n_answers": 0,
+                "parameters": {}, "community_N": {"error": "No data yet."}}
+    try:
+        result = compute_all(DATA_FILE, QUESTIONS_FILE)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return result
+
+
+@app.get("/api/results/{session_id}/computed", tags=["results"])
+async def get_individual_computed(session_id: str):
+    """
+    Compute and return the N distribution for a single session.
+    Uses the answers stored server-side, not the client localStorage.
+    """
+    data = _load()
+    if session_id not in data["sessions"]:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    answers   = [a for a in data["answers"] if a["session_id"] == session_id]
+    questions = json.load(QUESTIONS_FILE.open())
+
+    try:
+        result = compute_individual_N(answers, questions)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    answers = [a for a in data["answers"] if a["session_id"] == session_id]
+    return {"session_id": session_id, "N_distribution": result, "answers": answers}
 
 
 # ── Static file serving ────────────────────────────────────────────────────
