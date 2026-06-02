@@ -261,6 +261,22 @@ def _summarise_log_N(log_N: np.ndarray) -> dict:
 
 # ── Top-level: compute everything for the API endpoint ───────────────────
 
+
+def compute_all_from_answers(answers: list[dict], questions: list[dict]) -> dict:
+    """
+    Compute community PDFs and N distribution from a pre-loaded list of answers.
+    Called by main.py after fetching from the database.
+    (compute_all() below still reads from data.json — kept for CLI use.)
+    """
+    community_pdfs = compute_community_pdfs(answers, questions)
+    community_N    = compute_community_N(community_pdfs, questions)
+    return {
+        "n_answers":   len(answers),
+        "parameters":  community_pdfs,
+        "community_N": community_N,
+    }
+
+
 def compute_all(data_file: Path, questions_file: Path) -> dict:
     """
     Load data.json + questions.json and return the full computation result:
