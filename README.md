@@ -1,8 +1,10 @@
 # N-Elicit
 
+## Overview
+
 An updated version of [this](https://github.com/ferdesmello/drake-metaculus) other project.
 
-## Structure
+## Repository structure
 
 <pre>
 n-elicit/
@@ -17,12 +19,15 @@ n-elicit/
 │   ├── en.json
 │   ├── es.json
 │   └── pt.json
+├── data/
 └── backend/
     ├── main.py
     ├── requirements.txt
     ├── README.md
     └── database.py
 </pre>
+
+## What the code does
 
 ## Instructions
 
