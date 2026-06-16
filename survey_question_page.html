@@ -23,10 +23,7 @@
 			opacity: 0;
 			transition: opacity 0.15s ease;
 		}
-
-		body.ready {
-			opacity: 1;
-		}
+		body.ready { opacity: 1; }
 
 		#wrap {
 			width: 100%;
@@ -230,6 +227,15 @@
 
 		.inp-box input:focus {
 			color: #185fa5
+		}
+
+		/* boundary display: replaces the input when a wing is pinned */
+		.inp-box .boundary-text {
+			display: none;
+			font-size: 14px;
+			font-family: monospace;
+			color: #888780;
+			font-style: italic;
 		}
 
 		.derived-row {
@@ -505,6 +511,10 @@
 				color: #85b7eb
 			}
 
+			.inp-box .boundary-text {
+				color: #555450
+			}
+
 			.hdl {
 				background: #242422;
 				border-color: #888780
@@ -627,12 +637,20 @@
 			<p class="slider-hint" data-i18n="slider_hint">O pico é o valor mais provável. As alças laterais definem sua
 				incerteza em cada lado.</p>
 			<div class="inputs-row">
-				<div class="inp-box"><label data-i18n="pct10">Percentil 10</label><input id="inp-lo" type="text"
-						inputmode="decimal" /></div>
-				<div class="inp-box"><label data-i18n="mode_label">Moda (pico)</label><input id="inp-mode" type="text"
-						inputmode="decimal" /></div>
-				<div class="inp-box"><label data-i18n="pct90">Percentil 90</label><input id="inp-hi" type="text"
-						inputmode="decimal" /></div>
+				<div class="inp-box">
+					<label data-i18n="pct10">Percentil 10</label>
+					<input id="inp-lo" type="text" inputmode="decimal" />
+					<span class="boundary-text" id="bnd-lo"></span>
+				</div>
+				<div class="inp-box">
+					<label data-i18n="mode_label">Moda (pico)</label>
+					<input id="inp-mode" type="text" inputmode="decimal" />
+				</div>
+				<div class="inp-box">
+					<label data-i18n="pct90">Percentil 90</label>
+					<input id="inp-hi" type="text" inputmode="decimal" />
+					<span class="boundary-text" id="bnd-hi"></span>
+				</div>
 			</div>
 			<div id="canvas-wrap"><canvas id="cv" role="img" aria-label="Distribuição de probabilidade"></canvas></div>
 			<div id="track-area">
@@ -655,7 +673,7 @@
 				<span class="warn-icon">⚠</span>
 				<div class="skip-warning-text">
 					<b data-i18n="skip_warning_title">Pular esta pergunta impede o cálculo do seu N.</b>
-					<span data-i18n="skip_warning_body"> Todos os 10 parâmetros são necessários para calcular o número
+					<span data-i18n="skip_warning_body"> Todos os parâmetros são necessários para calcular o número
 						estimado de civilizações detectáveis. Você pode continuar, mas sua distribuição pessoal de N não
 						será exibida ao final.</span>
 					<div class="skip-confirm-row">
@@ -680,16 +698,14 @@
 
 		<div style="margin-bottom:.6rem">
 			<a id="back-to-intro" href="intro.html"
-				style="font-size:12px;color:#888780;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+			   style="font-size:12px;color:#888780;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
 				← <span data-i18n="back_to_intro">Voltar ao início</span>
 			</a>
 		</div>
 		<div class="nav-row">
 			<button class="nav-btn" onclick="navigate(-1)">← <span data-i18n="prev">Anterior</span></button>
-			<span class="autosave" id="save-note" data-i18n="saved" style="opacity:0;transition:opacity .3s ease">●
-				Rascunho salvo</span>
-			<button class="nav-btn primary" id="next-btn" onclick="navigate(1)"><span id="next-btn-label"
-					data-i18n="next">Próxima</span> →</button>
+			<span class="autosave" id="save-note" data-i18n="saved" style="opacity:0;transition:opacity .3s ease">● Rascunho salvo</span>
+			<button class="nav-btn primary" id="next-btn" onclick="navigate(1)"><span id="next-btn-label" data-i18n="next">Próxima</span> →</button>
 		</div>
 
 	</div>
@@ -707,79 +723,71 @@
 			document.documentElement.lang =
 				lang === 'pt' ? 'pt-BR' : lang;
 
-			/* translations */
-
 			const S = await fetch(`/i18n/${lang}.json`)
 				.then(r => r.json());
 			window._S = S;
 
-			/* generic ui strings */
 			document.querySelectorAll('[data-i18n]').forEach(el => {
 				const k = el.dataset.i18n;
-				if (S[k] !== undefined) {
-					el.textContent = S[k];
-				}
-
+				if (S[k] !== undefined) el.textContent = S[k];
 			});
 
-			/* questions */
-			const questions = await fetch('/questions.json')
-				.then(r => r.json());
+			const questions = await fetch('/questions.json').then(r => r.json());
 
-			/* later: survey.html?q=0 survey.html?q=1 etc. */
-
-			const qIndex =
-				parseInt(new URLSearchParams(location.search).get('q')) || 0;
+			const qIndex = parseInt(new URLSearchParams(location.search).get('q')) || 0;
 			const Q = questions[qIndex] || questions[0];
 			window.Q = Q;
 			window._questions = questions;
 
-			/* question-specific content */
-			document.getElementById('param-symbol').innerHTML =
-				Q.symbolHTML;
-			document.getElementById('param-name').textContent =
-				S[Q.paramKey];
-			document.getElementById('question-title').textContent =
-				S[Q.questionKey];
-			document.getElementById('axis-note').textContent =
-				S[Q.axisKey];
+			document.getElementById('param-symbol').innerHTML = Q.symbolHTML;
+			document.getElementById('param-name').textContent = S[Q.paramKey];
+			document.getElementById('question-title').textContent = S[Q.questionKey];
+			document.getElementById('axis-note').textContent = S[Q.axisKey];
 
-			/* progress */
 			document.querySelector('.progress-count').textContent =
 				`${qIndex + 1} / ${questions.length}`;
-			const progress =
-				((qIndex + 1) / questions.length) * 100;
-
 			document.querySelector('.progress-fill').style.width =
-				`${progress}%`;
+				`${((qIndex + 1) / questions.length) * 100}%`;
 
-			/* wire back link with lang */
 			const backLink = document.getElementById('back-to-intro');
 			if (backLink) backLink.href = `intro.html?lang=${lang}`;
 
-			/* update Next → Finish on last question */
 			if (qIndex === questions.length - 1) {
 				const lbl = document.getElementById('next-btn-label');
 				if (lbl && S.finish) lbl.textContent = S.finish;
 			}
 
-			/* notify slider system */
 			window.dispatchEvent(new Event('question-loaded'));
-
-			/* reveal page — eliminates language/question flash */
 			document.body.classList.add('ready');
-
 		})();
 
 		/* ── slider ── */
 		(function () {
 			/*
-			  Q.axisMode = 'log' | 'lin'
-			  For log: tMin/tMax are log10 values; toT/fromT convert via log10/pow10.
-			  For lin: tMin/tMax are the actual axis bounds (e.g. 0 and 1);
-					   toT/fromT are identity functions.
-			  initSpread: half-width in T-space for lo and hi around the visual centre.
-			*/
+			 * Truncated split-normal distribution in T-space
+			 * ───────────────────────────────────────────────
+			 * Q.axisMode = 'log' | 'lin'
+			 *
+			 * The distribution has hard boundaries [tMin, tMax]. No probability
+			 * mass exists outside those bounds. The PDF is renormalized over the
+			 * visible range using the normal CDF Φ (approximated by normCDF below).
+			 *
+			 * Handle boundary-pinning behaviour
+			 * ───────────────────────────────────
+			 * Wing handles (lo, hi) are passively pinned at the boundary when the
+			 * mode handle is close enough that the minimum gap would be violated.
+			 * They do NOT get pushed away — the mode slides over them.
+			 *
+			 * Concretely:
+			 *   tLo = clamp(tMode - minGap, tMin, tMax)
+			 *   tHi = clamp(tMode + minGap, tMin, tMax)
+			 *
+			 * When the mode is far from a boundary, tLo/tHi are determined by the
+			 * user's drag and can sit anywhere in [tMin, tMode-minGap] or
+			 * [tMode+minGap, tMax]. When the mode is close, the wing is pinned at
+			 * the boundary and the boundary-text label replaces the numeric input.
+			 */
+
 			let Q = null;
 
 			const Z90 = 1.2816, SIG_MIN = 0.02, MIN_PX_GAP = 32;
@@ -787,17 +795,20 @@
 			let hasInteracted = false;
 			let answerPreviouslySaved = false;
 
-			/* ── axis helpers: all branch on Q.axisMode ── */
-			function isLog() { return !Q || Q.axisMode !== 'lin'; }
-			function tMin() { return Q.tMin; }
-			function tMax() { return Q.tMax; }
-			function tSpan() { return Q.tMax - Q.tMin; }
-			function tCenter() { return (Q.tMin + Q.tMax) / 2; }
-			function clampT(t) { return Math.max(tMin(), Math.min(tMax(), t)); }
-			function fracOf(t) { return (t - tMin()) / tSpan(); }
-			function fromT(t) { return isLog() ? Math.pow(10, t) : t; }
+			/* ── axis helpers ── */
+			function isLog()    { return !Q || Q.axisMode !== 'lin'; }
+			function tMin()     { return Q.tMin; }
+			function tMax()     { return Q.tMax; }
+			function tSpan()    { return Q.tMax - Q.tMin; }
+			function tCenter()  { return (Q.tMin + Q.tMax) / 2; }
+			function clampT(t)  { return Math.max(tMin(), Math.min(tMax(), t)); }
+			function fracOf(t)  { return (t - tMin()) / tSpan(); }
+			function fromT(t)   { return isLog() ? Math.pow(10, t) : t; }
 			function toT(v) {
-				if (isLog()) return Math.log10(v);  // v is already guaranteed > 0 by the caller
+				/* Fixed: removed the Math.max(1e-15, v) clamp that prevented typing
+				   very small values. The v > 0 guard in the input handlers is
+				   sufficient; Math.log10 of a valid positive number is fine. */
+				if (isLog()) return Math.log10(v);
 				return Math.max(tMin(), Math.min(tMax(), v));
 			}
 
@@ -806,17 +817,32 @@
 				return tl ? tl.offsetWidth : 400;
 			}
 			function minTGap() {
-				const pgT = SIG_MIN * Z90;
+				const pgT  = SIG_MIN * Z90;
 				const pgPx = MIN_PX_GAP / trackWidth() * tSpan();
 				return Math.max(pgT, pgPx);
 			}
+
+			/*
+			 * safeSet — set tLo, tMode, tHi with boundary-pinning logic.
+			 *
+			 * The mode is clamped to [tMin, tMax]. Wings are then placed at
+			 * their requested positions, but clamped so they never go outside
+			 * [tMin, tMax] AND never cross the mode (they stop at tMode ± minGap).
+			 *
+			 * Critically, the mode is NOT prevented from going close to the
+			 * boundary — it can reach tMin or tMax. The wing simply pins at the
+			 * boundary and the mode slides past it. This differs from the old
+			 * behaviour where the mode was blocked at tMin+minGap / tMax-minGap.
+			 */
 			function safeSet(nl, nm, nh) {
 				const mg = minTGap();
 				nm = clampT(nm);
-				nm = Math.max(tMin() + mg, Math.min(tMax() - mg, nm));
-				nl = clampT(Math.min(nl, nm - mg));
-				nh = clampT(Math.max(nh, nm + mg));
-				tLo = nl; tMode = nm; tHi = nh;
+				// Wings clamp to [tMin, tMax] and cannot cross the mode.
+				// When the mode is within minGap of a boundary, the wing is
+				// pinned at that boundary (behind the mode handle visually).
+				tLo  = Math.max(tMin(), Math.min(nm - mg, nl));
+				tHi  = Math.min(tMax(), Math.max(nm + mg, nh));
+				tMode = nm;
 			}
 
 			function initState() {
@@ -824,53 +850,172 @@
 				safeSet(tc - Q.initSpread, tc, tc + Q.initSpread);
 			}
 
-			/* ── split-normal PDF in T-space (same formula for log and lin) ── */
+			/* ── normal CDF approximation (Abramowitz & Stegun 26.2.17) ──────────
+			 *
+			 * Φ(x) = P(Z ≤ x) for Z ~ N(0,1).
+			 * Maximum absolute error < 7.5×10⁻⁸ — more than sufficient here.
+			 *
+			 * This is needed for the truncation-aware normalization constant A
+			 * and for the derived stats (median, IQR) computed via numerical
+			 * CDF integration of the truncated PDF grid.
+			 */
+			function normCDF(x) {
+				if (x > 8)  return 1;
+				if (x < -8) return 0;
+				const t = 1 / (1 + 0.2316419 * Math.abs(x));
+				const p = t * (0.319381530
+					+ t * (-0.356563782
+					+ t * (1.781477937
+					+ t * (-1.821255978
+					+ t * 1.330274429))));
+				const phi = Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+				const c = 1 - phi * p;
+				return x >= 0 ? c : 1 - c;
+			}
+
+			/* ── truncation-aware normalization constant ──────────────────────────
+			 *
+			 * For an untruncated split-normal:
+			 *   A = sqrt(2/π) / (σ_L + σ_R)
+			 *
+			 * With boundaries [tMin, tMax], the visible mass under each half is:
+			 *   mass_L = Φ(0) - Φ((tMin - tMode) / σ_L)
+			 *   mass_R = Φ((tMax - tMode) / σ_R) - Φ(0)
+			 *
+			 * The un-normalized integral of each half-Gaussian over its visible
+			 * range is σ · √(2π) · mass, so:
+			 *   A = 1 / (σ_L · √(2π) · mass_L + σ_R · √(2π) · mass_R)
+			 *
+			 * When tMode is far from both boundaries, mass_L → 0.5 and mass_R → 0.5,
+			 * recovering the standard formula. Near a boundary, A increases so the
+			 * visible portion still integrates to 1.
+			 */
+			function truncNormConst(tM, sL, sR) {
+				const massL = normCDF(0) - normCDF((tMin() - tM) / sL);
+				const massR = normCDF((tMax() - tM) / sR) - normCDF(0);
+				const integral = sL * Math.sqrt(2 * Math.PI) * massL
+				               + sR * Math.sqrt(2 * Math.PI) * massR;
+				return integral > 0 ? 1 / integral : 1;
+			}
+
+			/* ── truncated split-normal PDF in T-space ────────────────────────────
+			 *
+			 * Evaluates to zero outside [tMin, tMax]. Inside, uses the
+			 * truncation-aware normalization constant from truncNormConst().
+			 * Matches the Python split_normal_pdf() in compute.py exactly.
+			 */
 			function splitPDF(t, tM, tL, tH) {
+				if (t < tMin() || t > tMax()) return 0;
 				const sL = Math.max(SIG_MIN, (tM - tL) / Z90);
 				const sR = Math.max(SIG_MIN, (tH - tM) / Z90);
-				const A = Math.sqrt(2 / Math.PI) / (sL + sR);
-				const s = t <= tM ? sL : sR, z = (t - tM) / s, e = Math.exp(-0.5 * z * z);
+				const A  = truncNormConst(tM, sL, sR);
+				const s  = t <= tM ? sL : sR;
+				const z  = (t - tM) / s;
+				const e  = Math.exp(-0.5 * z * z);
 				return isFinite(e) ? A * e : 0;
 			}
-			function medT() {
-				const sL = Math.max(SIG_MIN, (tMode - tLo) / Z90);
-				const sR = Math.max(SIG_MIN, (tHi - tMode) / Z90);
-				return tMode + (sR - sL) * Math.sqrt(2 / Math.PI) / 2;
+
+			/* ── derived stats via numerical CDF of the truncated PDF grid ────────
+			 *
+			 * The closed-form median/IQR formulas for the split-normal assume
+			 * untruncated tails and break near boundaries. We instead build a
+			 * CDF from the same 500-point PDF grid used for drawing and invert
+			 * it numerically. This is always consistent with what the user sees.
+			 *
+			 * Returns { median, q25, q75 } all in T-space.
+			 */
+			function derivedStats() {
+				const N  = 500;
+				const dt = tSpan() / N;
+				const ts = [], ys = [];
+				for (let i = 0; i <= N; i++) {
+					const t = tMin() + i * dt;
+					ts.push(t);
+					ys.push(splitPDF(t, tMode, tLo, tHi));
+				}
+				// Build CDF via trapezoidal integration
+				const cdf = [0];
+				for (let i = 1; i <= N; i++) {
+					cdf.push(cdf[i-1] + 0.5 * (ys[i-1] + ys[i]) * dt);
+				}
+				const total = cdf[N] || 1;
+				// Invert CDF at target quantiles by linear interpolation
+				function quantile(p) {
+					const target = p * total;
+					for (let i = 1; i <= N; i++) {
+						if (cdf[i] >= target) {
+							const frac = (target - cdf[i-1]) / Math.max(cdf[i] - cdf[i-1], 1e-30);
+							return ts[i-1] + frac * dt;
+						}
+					}
+					return ts[N];
+				}
+				return { median: quantile(0.5), q25: quantile(0.25), q75: quantile(0.75) };
 			}
-			function q25T() { return tMode - 0.6745 * Math.max(SIG_MIN, (tMode - tLo) / Z90); }
-			function q75T() { return tMode + 0.6745 * Math.max(SIG_MIN, (tHi - tMode) / Z90); }
 
 			/* ── value formatting ── */
 			function fmtV(v) {
-				if (!isLog()) {
-					/* linear: show 3 decimal places, clamp to axis range */
-					return Math.max(tMin(), Math.min(tMax(), v)).toFixed(3);
-				}
+				if (!isLog()) return Math.max(tMin(), Math.min(tMax(), v)).toFixed(3);
 				const a = Math.abs(v);
 				if (a >= 1e4 || (a > 0 && a < 0.01)) return v.toExponential(1).replace('e+', 'e');
 				if (a >= 100) return v.toFixed(0);
-				if (a >= 10) return v.toFixed(1);
-				if (a >= 1) return v.toFixed(2);
+				if (a >= 10)  return v.toFixed(1);
+				if (a >= 1)   return v.toFixed(2);
 				if (a >= 0.1) return v.toFixed(3);
 				return v.toFixed(4);
 			}
 
+			/* ── boundary label helpers ───────────────────────────────────────────
+			 *
+			 * When a wing handle is pinned at a boundary (tLo === tMin or
+			 * tHi === tMax), the numeric input is hidden and replaced with a
+			 * "< [boundary value]" or "> [boundary value]" text label to signal
+			 * that this side of the distribution extends to the axis edge.
+			 */
+			const EPS = 1e-9; // tolerance for boundary detection
+
+			function isPinnedLo()  { return Math.abs(tLo  - tMin()) < EPS; }
+			function isPinnedHi()  { return Math.abs(tHi  - tMax()) < EPS; }
+
+			function updateBoundaryDisplay() {
+				const inpLo  = document.getElementById('inp-lo');
+				const bndLo  = document.getElementById('bnd-lo');
+				const inpHi  = document.getElementById('inp-hi');
+				const bndHi  = document.getElementById('bnd-hi');
+
+				if (isPinnedLo()) {
+					inpLo.style.display  = 'none';
+					bndLo.style.display  = 'block';
+					bndLo.textContent    = '< ' + fmtV(fromT(tMin()));
+				} else {
+					inpLo.style.display  = '';
+					bndLo.style.display  = 'none';
+				}
+
+				if (isPinnedHi()) {
+					inpHi.style.display  = 'none';
+					bndHi.style.display  = 'block';
+					bndHi.textContent    = '> ' + fmtV(fromT(tMax()));
+				} else {
+					inpHi.style.display  = '';
+					bndHi.style.display  = 'none';
+				}
+			}
+
 			/* ── axis ticks ── */
 			function superscript(n) {
-				const map = {
-					'-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³',
-					'4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
-				};
+				const map = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³',
+				             '4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
 				return String(n).split('').map(c => map[c] || c).join('');
 			}
 			function formatLogTick(e) {
 				if (e === -3) return '0.001';
 				if (e === -2) return '0.01';
 				if (e === -1) return '0.1';
-				if (e === 0) return '1';
-				if (e === 1) return '10';
-				if (e === 2) return '100';
-				if (e === 3) return '1000';
+				if (e === 0)  return '1';
+				if (e === 1)  return '10';
+				if (e === 2)  return '100';
+				if (e === 3)  return '1000';
 				return '10' + superscript(e);
 			}
 			function tickStep() {
@@ -888,12 +1033,11 @@
 					}
 					return ticks;
 				} else {
-					/* linear: ~6 evenly spaced ticks */
 					const ticks = [];
-					const span = tMax() - tMin();
-					const raw = span / 5;
-					const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-					const step = Math.ceil(raw / mag) * mag;
+					const span  = tMax() - tMin();
+					const raw   = span / 5;
+					const mag   = Math.pow(10, Math.floor(Math.log10(raw)));
+					const step  = Math.ceil(raw / mag) * mag;
 					const start = Math.ceil(tMin() / step) * step;
 					for (let v = start; v <= tMax() + 1e-9; v = Math.round((v + step) * 1e10) / 1e10) {
 						ticks.push({ t: v, label: v.toFixed(2).replace(/\.?0+$/, '') });
@@ -904,30 +1048,35 @@
 
 			/* ── draw ── */
 			function draw() {
-				const wrap = document.getElementById('canvas-wrap');
+				const wrap   = document.getElementById('canvas-wrap');
 				const canvas = document.getElementById('cv');
-				const dpr = window.devicePixelRatio || 1;
-				const cssW = wrap.clientWidth, cssH = 185;
-				canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
-				canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+				const dpr    = window.devicePixelRatio || 1;
+				const cssW   = wrap.clientWidth, cssH = 185;
+				canvas.style.width  = cssW + 'px';
+				canvas.style.height = cssH + 'px';
+				canvas.width  = Math.round(cssW * dpr);
+				canvas.height = Math.round(cssH * dpr);
 
 				const ctx = canvas.getContext('2d');
 				const W = canvas.width, H = canvas.height;
 				ctx.clearRect(0, 0, W, H);
 
-				const PC = { top: 8, right: 15, bottom: 26, left: 15 };
-				const P = { top: PC.top * dpr, right: PC.right * dpr, bottom: PC.bottom * dpr, left: PC.left * dpr };
+				const PC = { top: 8, right: 20, bottom: 26, left: 20 };
+				const P  = { top: PC.top*dpr, right: PC.right*dpr,
+				             bottom: PC.bottom*dpr, left: PC.left*dpr };
 				const pw = W - P.left - P.right, ph = H - P.top - P.bottom;
 
 				const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
 				const cStr = dark ? 'rgba(200,160,100,.88)' : 'rgba(140,84,28,.82)';
 				const cFil = dark ? 'rgba(200,160,100,.20)' : 'rgba(180,120,50,.16)';
-				const cIQR = dark ? 'rgba(60,155,115,.33)' : 'rgba(20,135,85,.23)';
-				const cAx = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
+				const cIQR = dark ? 'rgba(60,155,115,.33)'  : 'rgba(20,135,85,.23)';
+				const cAx  = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
 				const cTxt = dark ? 'rgba(255,255,255,.42)' : 'rgba(0,0,0,.40)';
 				const cDsh = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.12)';
 
-				const N = 500, ts = [], ys = [];
+				/* Build PDF on the [tMin, tMax] grid — truncated and renormalized */
+				const N = 500;
+				const ts = [], ys = [];
 				let ymax = 0;
 				for (let i = 0; i <= N; i++) {
 					const t = tMin() + (i / N) * tSpan();
@@ -941,12 +1090,16 @@
 				function xpx(t) { return P.left + fracOf(t) * pw; }
 				function ypx(y) { return P.top + ph - (Math.min(y, ymax) / ymax) * ph; }
 
-				const q2 = clampT(q25T()), q7 = clampT(q75T());
+				/* IQR region from numerical stats */
+				const stats = derivedStats();
+				const q2 = clampT(stats.q25), q7 = clampT(stats.q75);
 
 				/* full fill */
-				ctx.beginPath(); ctx.moveTo(xpx(ts[0]), ypx(0));
+				ctx.beginPath();
+				ctx.moveTo(xpx(ts[0]), ypx(0));
 				for (let i = 0; i <= N; i++) ctx.lineTo(xpx(ts[i]), ypx(ys[i]));
-				ctx.lineTo(xpx(ts[N]), ypx(0)); ctx.closePath();
+				ctx.lineTo(xpx(ts[N]), ypx(0));
+				ctx.closePath();
 				ctx.fillStyle = cFil; ctx.fill();
 
 				/* IQR fill */
@@ -962,21 +1115,33 @@
 						ctx.beginPath(); inQ = false;
 					}
 				}
-				if (inQ) { ctx.lineTo(xpx(ts[N]), ypx(0)); ctx.closePath(); ctx.fillStyle = cIQR; ctx.fill(); }
+				if (inQ) {
+					ctx.lineTo(xpx(ts[N]), ypx(0)); ctx.closePath();
+					ctx.fillStyle = cIQR; ctx.fill();
+				}
 
 				/* outline */
-				ctx.beginPath(); ctx.moveTo(xpx(ts[0]), ypx(ys[0]));
+				ctx.beginPath();
+				ctx.moveTo(xpx(ts[0]), ypx(ys[0]));
 				for (let i = 1; i <= N; i++) ctx.lineTo(xpx(ts[i]), ypx(ys[i]));
 				ctx.strokeStyle = cStr; ctx.lineWidth = 1.8 * dpr; ctx.stroke();
 
-				/* dashed verticals */
-				[tLo, tMode, tHi].forEach(t => {
+				/* dashed verticals — only draw wing lines when not pinned at boundary */
+				const showLo   = !isPinnedLo();
+				const showHi   = !isPinnedHi();
+				const drawVert = [
+					showLo  ? tLo   : null,
+					          tMode,
+					showHi  ? tHi   : null,
+				];
+				drawVert.forEach(t => {
+					if (t === null) return;
 					const px = xpx(t);
 					if (px < P.left || px > W - P.right) return;
 					const y = splitPDF(t, tMode, tLo, tHi);
 					ctx.beginPath(); ctx.moveTo(px, ypx(y)); ctx.lineTo(px, ypx(0));
 					ctx.strokeStyle = cDsh; ctx.lineWidth = dpr;
-					ctx.setLineDash([3 * dpr, 3 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+					ctx.setLineDash([3*dpr, 3*dpr]); ctx.stroke(); ctx.setLineDash([]);
 				});
 
 				/* axis line */
@@ -986,11 +1151,11 @@
 
 				/* tick labels */
 				const ticks = axisTicks();
-				const fPx = Math.max(11, Math.round(11.5 * dpr));
+				const fPx   = Math.max(11, Math.round(11.5 * dpr));
 				ctx.fillStyle = cTxt;
-				ctx.font = `${fPx}px system-ui,-apple-system,sans-serif`;
+				ctx.font      = `${fPx}px system-ui,-apple-system,sans-serif`;
 				ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-				const tickY = P.top + ph + 4 * dpr;
+				const tickY         = P.top + ph + 4 * dpr;
 				const minTickSpacePx = 36 * dpr;
 				let lastPx = -Infinity;
 				ticks.forEach(({ t, label }) => {
@@ -999,7 +1164,7 @@
 					if (px - lastPx < minTickSpacePx) return;
 					lastPx = px;
 					ctx.fillText(label, px, tickY);
-					ctx.beginPath(); ctx.moveTo(px, P.top + ph); ctx.lineTo(px, P.top + ph + 3 * dpr);
+					ctx.beginPath(); ctx.moveTo(px, P.top + ph); ctx.lineTo(px, P.top + ph + 3*dpr);
 					ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
 				});
 			}
@@ -1007,46 +1172,54 @@
 			/* ── UI update ── */
 			function updateUI() {
 				function hpct(t) { return (fracOf(clampT(t)) * 100).toFixed(3) + '%'; }
-				document.getElementById('h-lo').style.left = hpct(tLo);
+				document.getElementById('h-lo').style.left   = hpct(tLo);
 				document.getElementById('h-mode').style.left = hpct(tMode);
-				document.getElementById('h-hi').style.left = hpct(tHi);
-				const lp = fracOf(clampT(tLo)) * 100, hp = fracOf(clampT(tHi)) * 100;
+				document.getElementById('h-hi').style.left   = hpct(tHi);
+
+				const lp   = fracOf(clampT(tLo))  * 100;
+				const hp   = fracOf(clampT(tHi))  * 100;
 				const fill = document.getElementById('track-fill');
-				fill.style.left = lp + '%'; fill.style.width = (hp - lp) + '%';
-				document.getElementById('inp-lo').value = fmtV(fromT(tLo));
+				fill.style.left  = lp + '%';
+				fill.style.width = (hp - lp) + '%';
+
+				/* Numeric inputs — only shown when wing is not boundary-pinned */
+				document.getElementById('inp-lo').value   = fmtV(fromT(tLo));
 				document.getElementById('inp-mode').value = fmtV(fromT(tMode));
-				document.getElementById('inp-hi').value = fmtV(fromT(tHi));
-				const S = window._S || {};
-				const mt = clampT(medT()), q2 = clampT(q25T()), q7 = clampT(q75T());
+				document.getElementById('inp-hi').value   = fmtV(fromT(tHi));
+				updateBoundaryDisplay();
+
+				/* Derived stats from truncated CDF */
+				const stats = derivedStats();
+				const S     = window._S || {};
 				const sL = Math.max(SIG_MIN, (tMode - tLo) / Z90).toFixed(3);
-				const sR = Math.max(SIG_MIN, (tHi - tMode) / Z90).toFixed(3);
+				const sR = Math.max(SIG_MIN, (tHi  - tMode) / Z90).toFixed(3);
 				document.getElementById('derived').innerHTML =
-					`<span>${S.median || 'Mediana'}: <b>${fmtV(fromT(mt))}</b></span>` +
-					`<span>IQR: [<b>${fmtV(fromT(q2))}</b>, <b>${fmtV(fromT(q7))}</b>]</span>` +
+					`<span>${S.median || 'Mediana'}: <b>${fmtV(fromT(clampT(stats.median)))}</b></span>` +
+					`<span>IQR: [<b>${fmtV(fromT(clampT(stats.q25)))}</b>, <b>${fmtV(fromT(clampT(stats.q75)))}</b>]</span>` +
 					`<span>σ<sub>L</sub>: <b>${sL}</b></span>` +
 					`<span>σ<sub>R</sub>: <b>${sR}</b></span>`;
 			}
 
 			function refresh() { updateUI(); draw(); updateNextButtonState(); }
 
+			/* ── draft save / load ── */
 			function saveDraft() {
-				/* always keep localStorage as offline fallback */
-				const key = `drake-answer-${Q.id}`;
-				const data = { tLo, tMode, tHi, skipped, axisMode: Q.axisMode, answered: hasInteracted || skipped };
+				const key  = `drake-answer-${Q.id}`;
+				const data = { tLo, tMode, tHi, skipped, axisMode: Q.axisMode,
+				               answered: hasInteracted || skipped };
 				localStorage.setItem(key, JSON.stringify(data));
-				/* also POST to server when a session exists */
 				const session_id = sessionStorage.getItem('drake_session');
 				if (!session_id) { flashSaved(); return; }
 				fetch('/api/answer', {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
+					headers: {'Content-Type': 'application/json'},
 					body: JSON.stringify({
 						session_id,
 						question_id: Q.id,
-						axis_mode: Q.axisMode,
-						t_lo: tLo,
+						axis_mode:   Q.axisMode,
+						t_lo:   tLo,
 						t_mode: tMode,
-						t_hi: tHi,
+						t_hi:   tHi,
 						skipped,
 					})
 				}).catch(e => console.warn('saveDraft API error:', e.message));
@@ -1067,10 +1240,10 @@
 				if (!raw) return;
 				try {
 					const data = JSON.parse(raw);
-					if (data.skipped) { skipped = true; setSkippedUI(true); }
-					else if (data.tLo !== undefined && data.tMode !== undefined && data.tHi !== undefined) {
+					if (data.skipped) {
+						skipped = true; setSkippedUI(true);
+					} else if (data.tLo !== undefined && data.tMode !== undefined && data.tHi !== undefined) {
 						tLo = data.tLo; tMode = data.tMode; tHi = data.tHi;
-						/* any stored t-values count as a prior answer — fixes redo */
 						answerPreviouslySaved = true;
 					}
 				} catch (err) { console.error(err); }
@@ -1101,8 +1274,8 @@
 			}
 			window.onSkipClick = () => document.getElementById('skip-warning').classList.add('visible');
 			window.confirmSkip = () => setSkippedUI(true);
-			window.cancelSkip = () => document.getElementById('skip-warning').classList.remove('visible');
-			window.undoSkip = () => setSkippedUI(false);
+			window.cancelSkip  = () => document.getElementById('skip-warning').classList.remove('visible');
+			window.undoSkip    = () => setSkippedUI(false);
 
 			/* ── drag ── */
 			let dragging = null, dsMode = 0, dsLo = 0, dsHi = 0;
@@ -1110,36 +1283,59 @@
 				const r = document.getElementById('track-line').getBoundingClientRect();
 				return Math.max(0, Math.min(1, (cx - r.left) / r.width));
 			}
+
 			['lo', 'mode', 'hi'].forEach(id => {
 				document.getElementById('h-' + id).addEventListener('pointerdown', e => {
-					e.preventDefault(); dragging = id;
+					e.preventDefault();
+					dragging = id;
 					dsMode = tMode; dsLo = tLo; dsHi = tHi;
 					document.getElementById('h-' + id).classList.add('drag');
 					document.addEventListener('pointermove', onMove);
 					document.addEventListener('pointerup', onUp);
 				});
 			});
+
 			function onMove(e) {
 				if (!dragging) return;
 				hasInteracted = true;
 				hideInteractionWarning();
 				const t = tMin() + trackFrac(e.clientX) * tSpan();
-				if (dragging === 'mode') { const d = t - dsMode; safeSet(dsLo + d, t, dsHi + d); }
-				else if (dragging === 'lo') safeSet(t, tMode, tHi);
-				else safeSet(tLo, tMode, t);
+
+				if (dragging === 'mode') {
+					/*
+					 * Mode drag: move mode to t, carry wings by the same delta.
+					 * safeSet will then pin wings at boundary if mode gets close.
+					 * dsLo/dsHi are the wing positions at drag-start, so the
+					 * relative spacing is preserved until a boundary clamps it.
+					 */
+					const d = t - dsMode;
+					safeSet(dsLo + d, t, dsHi + d);
+				} else if (dragging === 'lo') {
+					/* Left wing: free to move in [tMin, tMode - minGap] */
+					safeSet(t, tMode, tHi);
+				} else {
+					/* Right wing: free to move in [tMode + minGap, tMax] */
+					safeSet(tLo, tMode, t);
+				}
 				refresh();
 			}
+
 			function onUp() {
 				if (dragging) {
 					document.getElementById('h-' + dragging).classList.remove('drag');
-					dragging = null; saveDraft();
+					dragging = null;
+					saveDraft();
 				}
 				document.removeEventListener('pointermove', onMove);
 				document.removeEventListener('pointerup', onUp);
 			}
 
 			/* ── text inputs ── */
-			function parseInp(s) { const v = parseFloat(s.replace(',', '.')); return isNaN(v) ? null : v; }
+			function parseInp(s) {
+				const v = parseFloat(s.replace(',', '.'));
+				return isNaN(v) ? null : v;
+			}
+
 			document.getElementById('inp-lo').addEventListener('change', function () {
 				const v = parseInp(this.value);
 				if (v != null && (isLog() ? v > 0 : true)) {
@@ -1150,7 +1346,8 @@
 			document.getElementById('inp-mode').addEventListener('change', function () {
 				const v = parseInp(this.value);
 				if (v == null || (isLog() && v <= 0)) return;
-				const nt = clampT(toT(v)), d = nt - tMode;
+				const nt = clampT(toT(v));
+				const d  = nt - tMode;
 				hasInteracted = true; hideInteractionWarning();
 				safeSet(tLo + d, nt, tHi + d); refresh(); saveDraft();
 			});
@@ -1162,27 +1359,25 @@
 				}
 			});
 
+			/* ── navigation ── */
 			window.navigate = function (dir) {
-				const params = new URLSearchParams(location.search);
+				const params   = new URLSearchParams(location.search);
 				const currentQ = parseInt(params.get('q')) || 0;
-				const nextQ = currentQ + dir;
-				const lang = params.get('lang') || 'pt';
+				const nextQ    = currentQ + dir;
+				const lang     = params.get('lang') || 'pt';
 
-				/* backwards: always allowed, stop at q=0 */
 				if (dir < 0) {
 					if (nextQ < 0) return;
 					params.set('q', nextQ);
 					location.search = params.toString();
 					return;
 				}
-				/* forward: require interaction */
 				if (!hasInteracted && !skipped && !answerPreviouslySaved) {
 					const warn = document.getElementById('interaction-warning');
 					if (warn) warn.style.display = 'block';
 					return;
 				}
 				saveDraft();
-				/* last question → mark complete, then go to results */
 				if (nextQ >= window._questions.length) {
 					const session_id = sessionStorage.getItem('drake_session');
 					const goToResults = () => {
@@ -1192,10 +1387,10 @@
 					if (session_id) {
 						fetch('/api/complete', {
 							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
+							headers: {'Content-Type': 'application/json'},
 							body: JSON.stringify({ session_id })
 						}).catch(e => console.warn('complete API error:', e.message))
-							.finally(goToResults);
+						  .finally(goToResults);
 					} else {
 						goToResults();
 					}
