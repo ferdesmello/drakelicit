@@ -1,86 +1,79 @@
 [
-  {
-    "id": "R*",
-    "number": 0,
-    "symbolHTML": "R<sub style=\"font-size:9px\">*</sub>",
-    "axisMode": "log",
-    "tMin": -2,
-    "tMax": 3,
-    "initSpread": 1.0,
-    "paramKey": "Rs_param",
-    "questionKey": "Rs_question",
-    "axisKey": "Rs_axis"
-  },
-  {
-    "id": "fp",
-    "number": 1,
-    "symbolHTML": "f<sub style=\"font-size:9px\">p</sub>",
-    "axisMode": "log",
-    "tMin": -2,
-    "tMax": 0,
-    "initSpread": 1.0,
-    "paramKey": "fp_param",
-    "questionKey": "fp_question",
-    "axisKey": "fp_axis"
-  },
-  {
-    "id": "ne",
-    "number": 2,
-    "symbolHTML": "n<sub style=\"font-size:9px\">e</sub>",
-    "axisMode": "log",
-    "tMin": -8,
-    "tMax": 2,
-    "initSpread": 1.0,
-    "paramKey": "ne_param",
-    "questionKey": "ne_question",
-    "axisKey": "ne_axis"
-  },
-  {
-    "id": "fl",
-    "number": 3,
-    "symbolHTML": "f<sub style=\"font-size:9px\">l</sub>",
-    "axisMode": "log",
-    "tMin": -31,
-    "tMax": 0,
-    "initSpread": 1.2,
-    "paramKey": "fl_param",
-    "questionKey": "fl_question",
-    "axisKey": "fl_axis"
-  },
-  {
-    "id": "fi",
-    "number": 4,
-    "symbolHTML": "f<sub style=\"font-size:9px\">i</sub>",
-    "axisMode": "log",
-    "tMin": -20,
-    "tMax": 0,
-    "initSpread": 1.0,
-    "paramKey": "fi_param",
-    "questionKey": "fi_question",
-    "axisKey": "fi_axis"
-  },
-  {
-    "id": "fc",
-    "number": 5,
-    "symbolHTML": "f<sub style=\"font-size:9px\">c</sub>",
-    "axisMode": "log",
-    "tMin": -8,
-    "tMax": 0,
-    "initSpread": 1.0,
-    "paramKey": "fc_param",
-    "questionKey": "fc_question",
-    "axisKey": "fc_axis"
-  },
-  {
-    "id": "L",
-    "number": 6,
-    "symbolHTML": "L",
-    "axisMode": "log",
-    "tMin": 1,
-    "tMax": 10,
-    "initSpread": 1.0,
-    "paramKey": "L_param",
-    "questionKey": "L_question",
-    "axisKey": "L_axis"
-  }
+	{
+		"id": "Ns",
+		"symbolHTML": "N<sub>★</sub>",
+		"paramKey": "Ns_param",
+		"questionKey": "Ns_question",
+		"axisKey": "Ns_axis",
+		"axisMode": "log",
+		"tMin": 9,
+		"tMax": 12,
+		"initSpread": 0.5
+	},
+	{
+		"id": "fp",
+		"symbolHTML": "f<sub>p</sub>",
+		"paramKey": "fp_param",
+		"questionKey": "fp_question",
+		"axisKey": "fp_axis",
+		"axisMode": "log",
+		"tMin": -2,
+		"tMax": 0,
+		"initSpread": 0.5
+	},
+	{
+		"id": "ne",
+		"symbolHTML": "n<sub>e</sub>",
+		"paramKey": "ne_param",
+		"questionKey": "ne_question",
+		"axisKey": "ne_axis",
+		"axisMode": "log",
+		"tMin": -8,
+		"tMax": 2,
+		"initSpread": 1.0
+	},
+	{
+		"id": "fl",
+		"symbolHTML": "f<sub>l</sub>",
+		"paramKey": "fl_param",
+		"questionKey": "fl_question",
+		"axisKey": "fl_axis",
+		"axisMode": "log",
+		"tMin": -31,
+		"tMax": 0,
+		"initSpread": 3.0
+	},
+	{
+		"id": "fi",
+		"symbolHTML": "f<sub>i</sub>",
+		"paramKey": "fi_param",
+		"questionKey": "fi_question",
+		"axisKey": "fi_axis",
+		"axisMode": "log",
+		"tMin": -20,
+		"tMax": 0,
+		"initSpread": 3.0
+	},
+	{
+		"id": "fc",
+		"symbolHTML": "f<sub>c</sub>",
+		"paramKey": "fc_param",
+		"questionKey": "fc_question",
+		"axisKey": "fc_axis",
+		"axisMode": "log",
+		"tMin": -8,
+		"tMax": 0,
+		"initSpread": 1.5
+	},
+	{
+		"id": "fL",
+		"symbolHTML": "f<sub>L</sub>",
+		"paramKey": "fL_param",
+		"questionKey": "fL_question",
+		"axisKey": "fL_axis",
+		"axisMode": "log",
+		"tMin": -9,
+		"tMax": 0,
+		"initSpread": 2.0
+	}
 ]

@@ -23,7 +23,10 @@
 			opacity: 0;
 			transition: opacity 0.15s ease;
 		}
-		body.ready { opacity: 1; }
+
+		body.ready {
+			opacity: 1;
+		}
 
 		#wrap {
 			width: 100%;
@@ -677,14 +680,16 @@
 
 		<div style="margin-bottom:.6rem">
 			<a id="back-to-intro" href="intro.html"
-			   style="font-size:12px;color:#888780;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+				style="font-size:12px;color:#888780;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
 				← <span data-i18n="back_to_intro">Voltar ao início</span>
 			</a>
 		</div>
 		<div class="nav-row">
 			<button class="nav-btn" onclick="navigate(-1)">← <span data-i18n="prev">Anterior</span></button>
-			<span class="autosave" id="save-note" data-i18n="saved" style="opacity:0;transition:opacity .3s ease">● Rascunho salvo</span>
-			<button class="nav-btn primary" id="next-btn" onclick="navigate(1)"><span id="next-btn-label" data-i18n="next">Próxima</span> →</button>
+			<span class="autosave" id="save-note" data-i18n="saved" style="opacity:0;transition:opacity .3s ease">●
+				Rascunho salvo</span>
+			<button class="nav-btn primary" id="next-btn" onclick="navigate(1)"><span id="next-btn-label"
+					data-i18n="next">Próxima</span> →</button>
 		</div>
 
 	</div>
@@ -727,7 +732,7 @@
 				parseInt(new URLSearchParams(location.search).get('q')) || 0;
 			const Q = questions[qIndex] || questions[0];
 			window.Q = Q;
-				window._questions = questions;
+			window._questions = questions;
 
 			/* question-specific content */
 			document.getElementById('param-symbol').innerHTML =
@@ -772,7 +777,7 @@
 			  Q.axisMode = 'log' | 'lin'
 			  For log: tMin/tMax are log10 values; toT/fromT convert via log10/pow10.
 			  For lin: tMin/tMax are the actual axis bounds (e.g. 0 and 1);
-			           toT/fromT are identity functions.
+					   toT/fromT are identity functions.
 			  initSpread: half-width in T-space for lo and hi around the visual centre.
 			*/
 			let Q = null;
@@ -792,7 +797,7 @@
 			function fracOf(t) { return (t - tMin()) / tSpan(); }
 			function fromT(t) { return isLog() ? Math.pow(10, t) : t; }
 			function toT(v) {
-				if (isLog()) return Math.log10(Math.max(1e-15, v));
+				if (isLog()) return Math.log10(v);  // v is already guaranteed > 0 by the caller
 				return Math.max(tMin(), Math.min(tMax(), v));
 			}
 
@@ -844,26 +849,28 @@
 				const a = Math.abs(v);
 				if (a >= 1e4 || (a > 0 && a < 0.01)) return v.toExponential(1).replace('e+', 'e');
 				if (a >= 100) return v.toFixed(0);
-				if (a >= 10)  return v.toFixed(1);
-				if (a >= 1)   return v.toFixed(2);
+				if (a >= 10) return v.toFixed(1);
+				if (a >= 1) return v.toFixed(2);
 				if (a >= 0.1) return v.toFixed(3);
 				return v.toFixed(4);
 			}
 
 			/* ── axis ticks ── */
 			function superscript(n) {
-				const map = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³',
-				             '4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+				const map = {
+					'-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³',
+					'4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+				};
 				return String(n).split('').map(c => map[c] || c).join('');
 			}
 			function formatLogTick(e) {
 				if (e === -3) return '0.001';
 				if (e === -2) return '0.01';
 				if (e === -1) return '0.1';
-				if (e === 0)  return '1';
-				if (e === 1)  return '10';
-				if (e === 2)  return '100';
-				if (e === 3)  return '1000';
+				if (e === 0) return '1';
+				if (e === 1) return '10';
+				if (e === 2) return '100';
+				if (e === 3) return '1000';
 				return '10' + superscript(e);
 			}
 			function tickStep() {
@@ -908,15 +915,15 @@
 				const W = canvas.width, H = canvas.height;
 				ctx.clearRect(0, 0, W, H);
 
-				const PC = { top: 8, right: 20, bottom: 26, left: 20 };
+				const PC = { top: 8, right: 15, bottom: 26, left: 15 };
 				const P = { top: PC.top * dpr, right: PC.right * dpr, bottom: PC.bottom * dpr, left: PC.left * dpr };
 				const pw = W - P.left - P.right, ph = H - P.top - P.bottom;
 
 				const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
 				const cStr = dark ? 'rgba(200,160,100,.88)' : 'rgba(140,84,28,.82)';
 				const cFil = dark ? 'rgba(200,160,100,.20)' : 'rgba(180,120,50,.16)';
-				const cIQR = dark ? 'rgba(60,155,115,.33)'  : 'rgba(20,135,85,.23)';
-				const cAx  = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
+				const cIQR = dark ? 'rgba(60,155,115,.33)' : 'rgba(20,135,85,.23)';
+				const cAx = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
 				const cTxt = dark ? 'rgba(255,255,255,.42)' : 'rgba(0,0,0,.40)';
 				const cDsh = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.12)';
 
@@ -1000,15 +1007,15 @@
 			/* ── UI update ── */
 			function updateUI() {
 				function hpct(t) { return (fracOf(clampT(t)) * 100).toFixed(3) + '%'; }
-				document.getElementById('h-lo').style.left   = hpct(tLo);
+				document.getElementById('h-lo').style.left = hpct(tLo);
 				document.getElementById('h-mode').style.left = hpct(tMode);
-				document.getElementById('h-hi').style.left   = hpct(tHi);
+				document.getElementById('h-hi').style.left = hpct(tHi);
 				const lp = fracOf(clampT(tLo)) * 100, hp = fracOf(clampT(tHi)) * 100;
 				const fill = document.getElementById('track-fill');
 				fill.style.left = lp + '%'; fill.style.width = (hp - lp) + '%';
-				document.getElementById('inp-lo').value   = fmtV(fromT(tLo));
+				document.getElementById('inp-lo').value = fmtV(fromT(tLo));
 				document.getElementById('inp-mode').value = fmtV(fromT(tMode));
-				document.getElementById('inp-hi').value   = fmtV(fromT(tHi));
+				document.getElementById('inp-hi').value = fmtV(fromT(tHi));
 				const S = window._S || {};
 				const mt = clampT(medT()), q2 = clampT(q25T()), q7 = clampT(q75T());
 				const sL = Math.max(SIG_MIN, (tMode - tLo) / Z90).toFixed(3);
@@ -1032,14 +1039,14 @@
 				if (!session_id) { flashSaved(); return; }
 				fetch('/api/answer', {
 					method: 'POST',
-					headers: {'Content-Type': 'application/json'},
+					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						session_id,
 						question_id: Q.id,
-						axis_mode:   Q.axisMode,
-						t_lo:   tLo,
+						axis_mode: Q.axisMode,
+						t_lo: tLo,
 						t_mode: tMode,
-						t_hi:   tHi,
+						t_hi: tHi,
 						skipped,
 					})
 				}).catch(e => console.warn('saveDraft API error:', e.message));
@@ -1064,7 +1071,7 @@
 					else if (data.tLo !== undefined && data.tMode !== undefined && data.tHi !== undefined) {
 						tLo = data.tLo; tMode = data.tMode; tHi = data.tHi;
 						/* any stored t-values count as a prior answer — fixes redo */
-					answerPreviouslySaved = true;
+						answerPreviouslySaved = true;
 					}
 				} catch (err) { console.error(err); }
 			}
@@ -1094,8 +1101,8 @@
 			}
 			window.onSkipClick = () => document.getElementById('skip-warning').classList.add('visible');
 			window.confirmSkip = () => setSkippedUI(true);
-			window.cancelSkip  = () => document.getElementById('skip-warning').classList.remove('visible');
-			window.undoSkip    = () => setSkippedUI(false);
+			window.cancelSkip = () => document.getElementById('skip-warning').classList.remove('visible');
+			window.undoSkip = () => setSkippedUI(false);
 
 			/* ── drag ── */
 			let dragging = null, dsMode = 0, dsLo = 0, dsHi = 0;
@@ -1185,10 +1192,10 @@
 					if (session_id) {
 						fetch('/api/complete', {
 							method: 'POST',
-							headers: {'Content-Type': 'application/json'},
+							headers: { 'Content-Type': 'application/json' },
 							body: JSON.stringify({ session_id })
 						}).catch(e => console.warn('complete API error:', e.message))
-						  .finally(goToResults);
+							.finally(goToResults);
 					} else {
 						goToResults();
 					}

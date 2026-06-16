@@ -1,469 +1,815 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Resultados — Equação de Drake</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:system-ui,-apple-system,sans-serif;
-  background:#f5f4f0;color:#1a1a18;
-  min-height:100vh;display:flex;justify-content:center;
-  padding:2.5rem 1.25rem;
-  opacity:0;transition:opacity .15s ease;
-}
-body.ready{opacity:1}
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Resultados — Equação de Drake</title>
+	<style>
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0
+		}
 
-/* wider wrap on desktop */
-#wrap{width:100%;max-width:600px}
-@media(min-width:800px){#wrap{max-width:820px}}
-@media(min-width:1100px){#wrap{max-width:960px}}
+		body {
+			font-family: system-ui, -apple-system, sans-serif;
+			background: #f5f4f0;
+			color: #1a1a18;
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			padding: 2.5rem 1.25rem;
+			opacity: 0;
+			transition: opacity .15s ease;
+		}
 
-.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#888780;margin-bottom:1rem}
-h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
-.subtitle{font-size:15px;color:#5f5e5a;line-height:1.6;margin-bottom:2rem}
+		body.ready {
+			opacity: 1
+		}
 
-/* cards */
-.result-card{background:#fff;border:0.5px solid #d3d1c7;border-radius:12px;padding:1.4rem;margin-bottom:1.25rem}
-.result-card h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888780;margin-bottom:.75rem}
+		/* wider wrap on desktop */
+		#wrap {
+			width: 100%;
+			max-width: 600px
+		}
 
-/* stats row — same weight as everything else, no big number */
-.stats-row{
-  display:flex;gap:1.4rem;flex-wrap:wrap;
-  font-size:13px;color:#888780;
-  margin-bottom:.85rem;padding-bottom:.85rem;
-  border-bottom:0.5px solid #ebe9e0;
-}
-.stats-row span b{font-weight:500;color:#5f5e5a;font-family:monospace}
+		@media(min-width:800px) {
+			#wrap {
+				max-width: 820px
+			}
+		}
 
-/* canvas */
-.canvas-wrap{position:relative;width:100%;height:220px;margin-bottom:.6rem}
-.canvas-wrap canvas{width:100%;height:100%;display:block}
+		@media(min-width:1100px) {
+			#wrap {
+				max-width: 960px
+			}
+		}
 
-/* legend */
-.legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:12px;color:#888780;margin-bottom:.75rem}
-.legend-item{display:flex;align-items:center;gap:5px}
-.swatch-line{width:26px;height:3px;border-radius:2px;flex-shrink:0}
-.swatch-line.your{background:rgba(20,140,90,.85)}
-.swatch-line.comm{background:rgba(180,80,40,.8)}
-.swatch-dash{width:26px;height:0;flex-shrink:0}
-.swatch-dash.mw  {border-top:2.5px dashed rgba(180,110,20,.85)}
-.swatch-dash.univ{border-top:2.5px dashed rgba(50,80,180,.85)}
+		.eyebrow {
+			font-size: 11px;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+			color: #888780;
+			margin-bottom: 1rem
+		}
 
-/* probability table */
-.prob-table{width:100%;border-collapse:collapse;margin-top:.25rem;margin-bottom:.5rem}
-.prob-table td{font-size:12px;padding:6px 8px;vertical-align:middle;border-top:0.5px solid #ebe9e0}
-.prob-table tr:first-child td{border-top:none}
-.prob-label{color:#5f5e5a;line-height:1.5}
-.prob-value{text-align:right;font-family:monospace;font-size:13px;font-weight:500;white-space:nowrap}
-.color-not-alone-mw {color:#1a8a50}
-.color-alone-mw     {color:#a06010}
-.color-alone-univ   {color:#3050a0}
+		h1 {
+			font-size: 24px;
+			font-weight: 600;
+			line-height: 1.25;
+			margin-bottom: .6rem
+		}
 
-/* mc note */
-.mc-note{font-size:11px;color:#888780;text-align:center;margin-top:.35rem;line-height:1.5}
+		.subtitle {
+			font-size: 15px;
+			color: #5f5e5a;
+			line-height: 1.6;
+			margin-bottom: 2rem
+		}
 
-/* community note */
-.community-note{font-size:13px;color:#888780;font-style:italic;text-align:center;padding:.4rem 0}
+		/* cards */
+		.result-card {
+			background: #fff;
+			border: 0.5px solid #d3d1c7;
+			border-radius: 12px;
+			padding: 1.4rem;
+			margin-bottom: 1.25rem
+		}
 
-/* param table */
-.param-table{width:100%;border-collapse:collapse;margin-top:.25rem}
-.param-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#888780;font-weight:500;text-align:left;padding:0 0 6px}
-.param-table th:last-child{text-align:right}
-.param-table td{font-size:13px;padding:7px 0;border-top:0.5px solid #ebe9e0;color:#1a1a18;vertical-align:middle}
-.param-table td:last-child{text-align:right;font-family:monospace;font-size:12px;color:#5f5e5a}
-.param-sym{font-family:monospace;font-size:12px;color:#888780;width:28px}
-.skipped-tag{font-size:10px;color:#ba7517;background:#faeeda;padding:2px 7px;border-radius:4px}
+		.result-card h2 {
+			font-size: 13px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: .06em;
+			color: #888780;
+			margin-bottom: .75rem
+		}
 
-/* actions */
-.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem}
-.action-btn{flex:1;min-width:140px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;font-size:14px;font-family:inherit;border-radius:8px;cursor:pointer;text-decoration:none;transition:opacity .12s}
-.action-btn.primary{background:#1a1a18;color:#f5f4f0;border:none;font-weight:500}
-.action-btn.primary:hover{opacity:.85}
-.action-btn.secondary{background:transparent;border:0.5px solid #b4b2a9;color:#1a1a18}
-.action-btn.secondary:hover{background:#f1efe8}
-.footer-note{font-size:12px;color:#888780;text-align:center;line-height:1.6}
+		/* stats row — same weight as everything else, no big number */
+		.stats-row {
+			display: flex;
+			gap: 1.4rem;
+			flex-wrap: wrap;
+			font-size: 13px;
+			color: #888780;
+			margin-bottom: .85rem;
+			padding-bottom: .85rem;
+			border-bottom: 0.5px solid #ebe9e0;
+		}
 
-@media(prefers-color-scheme:dark){
-  body{background:#1a1a18;color:#f1efe8}
-  .eyebrow{color:#666460}.subtitle{color:#888780}
-  .legend{color:#666460}.mc-note{color:#666460}.community-note{color:#666460}
-  .result-card{background:#242422;border-color:#3a3a37}
-  .result-card h2{color:#666460}
-  .stats-row{color:#666460;border-color:#3a3a37}
-  .stats-row span b{color:#888780}
-  .prob-table td{border-color:#3a3a37}
-  .prob-label{color:#888780}
-  .color-not-alone-mw{color:#30c070}
-  .color-alone-mw    {color:#d4a040}
-  .color-alone-univ  {color:#7090e0}
-  .swatch-dash.mw  {border-top-color:rgba(210,160,50,.85)}
-  .swatch-dash.univ{border-top-color:rgba(110,140,230,.85)}
-  .param-table th{color:#666460}
-  .param-table td{color:#f1efe8;border-color:#3a3a37}
-  .param-table td:last-child{color:#888780}
-  .param-sym{color:#666460}
-  .skipped-tag{background:#2e1800;color:#fac775}
-  .action-btn.primary{background:#d4d2c8;color:#1a1a18}
-  .action-btn.secondary{border-color:#444441;color:#f1efe8}
-  .action-btn.secondary:hover{background:#333330}
-  .footer-note{color:#555450}
-}
-</style>
+		.stats-row span b {
+			font-weight: 500;
+			color: #5f5e5a;
+			font-family: monospace
+		}
+
+		/* canvas */
+		.canvas-wrap {
+			position: relative;
+			width: 100%;
+			height: 220px;
+			margin-bottom: .6rem
+		}
+
+		.canvas-wrap canvas {
+			width: 100%;
+			height: 100%;
+			display: block
+		}
+
+		/* legend */
+		.legend {
+			display: flex;
+			gap: 1.2rem;
+			flex-wrap: wrap;
+			font-size: 12px;
+			color: #888780;
+			margin-bottom: .75rem
+		}
+
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 5px
+		}
+
+		.swatch-line {
+			width: 26px;
+			height: 3px;
+			border-radius: 2px;
+			flex-shrink: 0
+		}
+
+		.swatch-line.your {
+			background: rgba(20, 140, 90, .85)
+		}
+
+		.swatch-line.comm {
+			background: rgba(180, 80, 40, .8)
+		}
+
+		.swatch-dash {
+			width: 26px;
+			height: 0;
+			flex-shrink: 0
+		}
+
+		.swatch-dash.mw {
+			border-top: 2.5px dashed rgba(180, 110, 20, .85)
+		}
+
+		.swatch-dash.univ {
+			border-top: 2.5px dashed rgba(50, 80, 180, .85)
+		}
+
+		/* probability table */
+		.prob-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: .25rem;
+			margin-bottom: .5rem
+		}
+
+		.prob-table td {
+			font-size: 12px;
+			padding: 6px 8px;
+			vertical-align: middle;
+			border-top: 0.5px solid #ebe9e0
+		}
+
+		.prob-table tr:first-child td {
+			border-top: none
+		}
+
+		.prob-label {
+			color: #5f5e5a;
+			line-height: 1.5
+		}
+
+		.prob-value {
+			text-align: right;
+			font-family: monospace;
+			font-size: 13px;
+			font-weight: 500;
+			white-space: nowrap
+		}
+
+		.color-not-alone-mw {
+			color: #1a8a50
+		}
+
+		.color-alone-mw {
+			color: #a06010
+		}
+
+		.color-alone-univ {
+			color: #3050a0
+		}
+
+		/* mc note */
+		.mc-note {
+			font-size: 11px;
+			color: #888780;
+			text-align: center;
+			margin-top: .35rem;
+			line-height: 1.5
+		}
+
+		/* community note */
+		.community-note {
+			font-size: 13px;
+			color: #888780;
+			font-style: italic;
+			text-align: center;
+			padding: .4rem 0
+		}
+
+		/* param table */
+		.param-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: .25rem
+		}
+
+		.param-table th {
+			font-size: 10px;
+			text-transform: uppercase;
+			letter-spacing: .05em;
+			color: #888780;
+			font-weight: 500;
+			text-align: left;
+			padding: 0 0 6px
+		}
+
+		.param-table th:last-child {
+			text-align: right
+		}
+
+		.param-table td {
+			font-size: 13px;
+			padding: 7px 0;
+			border-top: 0.5px solid #ebe9e0;
+			color: #1a1a18;
+			vertical-align: middle
+		}
+
+		.param-table td:last-child {
+			text-align: right;
+			font-family: monospace;
+			font-size: 12px;
+			color: #5f5e5a
+		}
+
+		.param-sym {
+			font-family: monospace;
+			font-size: 12px;
+			color: #888780;
+			width: 28px
+		}
+
+		.skipped-tag {
+			font-size: 10px;
+			color: #ba7517;
+			background: #faeeda;
+			padding: 2px 7px;
+			border-radius: 4px
+		}
+
+		/* actions */
+		.action-row {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+			margin-bottom: 1.5rem
+		}
+
+		.action-btn {
+			flex: 1;
+			min-width: 140px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 7px;
+			padding: 11px 16px;
+			font-size: 14px;
+			font-family: inherit;
+			border-radius: 8px;
+			cursor: pointer;
+			text-decoration: none;
+			transition: opacity .12s
+		}
+
+		.action-btn.primary {
+			background: #1a1a18;
+			color: #f5f4f0;
+			border: none;
+			font-weight: 500
+		}
+
+		.action-btn.primary:hover {
+			opacity: .85
+		}
+
+		.action-btn.secondary {
+			background: transparent;
+			border: 0.5px solid #b4b2a9;
+			color: #1a1a18
+		}
+
+		.action-btn.secondary:hover {
+			background: #f1efe8
+		}
+
+		.footer-note {
+			font-size: 12px;
+			color: #888780;
+			text-align: center;
+			line-height: 1.6
+		}
+
+		@media(prefers-color-scheme:dark) {
+			body {
+				background: #1a1a18;
+				color: #f1efe8
+			}
+
+			.eyebrow {
+				color: #666460
+			}
+
+			.subtitle {
+				color: #888780
+			}
+
+			.legend {
+				color: #666460
+			}
+
+			.mc-note {
+				color: #666460
+			}
+
+			.community-note {
+				color: #666460
+			}
+
+			.result-card {
+				background: #242422;
+				border-color: #3a3a37
+			}
+
+			.result-card h2 {
+				color: #666460
+			}
+
+			.stats-row {
+				color: #666460;
+				border-color: #3a3a37
+			}
+
+			.stats-row span b {
+				color: #888780
+			}
+
+			.prob-table td {
+				border-color: #3a3a37
+			}
+
+			.prob-label {
+				color: #888780
+			}
+
+			.color-not-alone-mw {
+				color: #30c070
+			}
+
+			.color-alone-mw {
+				color: #d4a040
+			}
+
+			.color-alone-univ {
+				color: #7090e0
+			}
+
+			.swatch-dash.mw {
+				border-top-color: rgba(210, 160, 50, .85)
+			}
+
+			.swatch-dash.univ {
+				border-top-color: rgba(110, 140, 230, .85)
+			}
+
+			.param-table th {
+				color: #666460
+			}
+
+			.param-table td {
+				color: #f1efe8;
+				border-color: #3a3a37
+			}
+
+			.param-table td:last-child {
+				color: #888780
+			}
+
+			.param-sym {
+				color: #666460
+			}
+
+			.skipped-tag {
+				background: #2e1800;
+				color: #fac775
+			}
+
+			.action-btn.primary {
+				background: #d4d2c8;
+				color: #1a1a18
+			}
+
+			.action-btn.secondary {
+				border-color: #444441;
+				color: #f1efe8
+			}
+
+			.action-btn.secondary:hover {
+				background: #333330
+			}
+
+			.footer-note {
+				color: #555450
+			}
+		}
+	</style>
 </head>
+
 <body>
-<div id="wrap">
-  <p class="eyebrow" data-i18n="results_eyebrow">Equação de Drake · Levantamento Astrobiológico</p>
-  <h1 data-i18n="results_title">Seus resultados</h1>
-  <p class="subtitle" data-i18n="results_subtitle">Com base nas suas distribuições, calculamos a sua estimativa pessoal de N.</p>
+	<div id="wrap">
+		<p class="eyebrow" data-i18n="results_eyebrow">Equação de Drake · Levantamento Astrobiológico</p>
+		<h1 data-i18n="results_title">Seus resultados</h1>
+		<p class="subtitle" data-i18n="results_subtitle">Com base nas suas distribuições, calculamos a sua estimativa
+			pessoal de N.</p>
 
-  <!-- N distribution card -->
-  <div class="result-card">
-    <h2 data-i18n="results_your_n">Sua distribuição de N</h2>
+		<!-- N distribution card -->
+		<div class="result-card">
+			<h2 data-i18n="results_your_n">Sua distribuição de N</h2>
 
-    <!-- stats — same visual weight, no dominant number -->
-    <div class="stats-row" id="stats-row">
-      <span><span data-i18n="results_stats_median">Mediana</span>: <b id="stat-median">—</b></span>
-      <span><span data-i18n="results_stats_iqr">IQR</span>: <b id="stat-iqr">—</b></span>
-      <span><span data-i18n="results_stats_90">Intervalo 90%</span>: <b id="stat-90">—</b></span>
-    </div>
+			<!-- stats — same visual weight, no dominant number -->
+			<div class="stats-row" id="stats-row">
+				<span><span data-i18n="results_stats_median">Mediana</span>: <b id="stat-median">—</b></span>
+				<span><span data-i18n="results_stats_iqr">IQR</span>: <b id="stat-iqr">—</b></span>
+				<span><span data-i18n="results_stats_90">Intervalo 90%</span>: <b id="stat-90">—</b></span>
+			</div>
 
-    <!-- legend -->
-    <div class="legend">
-      <div class="legend-item">
-        <div class="swatch-line your"></div>
-        <span data-i18n="results_your_curve">Sua distribuição</span>
-      </div>
-      <div class="legend-item" id="comm-legend-item" style="display:none">
-        <div class="swatch-line comm"></div>
-        <span data-i18n="results_comm_curve">Comunidade</span>
-      </div>
-      <div class="legend-item">
-        <div class="swatch-dash mw"></div>
-        <span data-i18n="results_ref_n1_label">N = 1</span>
-      </div>
-      <div class="legend-item">
-        <div class="swatch-dash univ"></div>
-        <span data-i18n="results_ref_nu_label">N = 5×10⁻¹³</span>
-      </div>
-    </div>
+			<!-- legend -->
+			<div class="legend">
+				<div class="legend-item">
+					<div class="swatch-line your"></div>
+					<span data-i18n="results_your_curve">Sua distribuição</span>
+				</div>
+				<div class="legend-item" id="comm-legend-item" style="display:none">
+					<div class="swatch-line comm"></div>
+					<span data-i18n="results_comm_curve">Comunidade</span>
+				</div>
+				<div class="legend-item">
+					<div class="swatch-dash mw"></div>
+					<span data-i18n="results_ref_n1_label">N = 1</span>
+				</div>
+				<div class="legend-item">
+					<div class="swatch-dash univ"></div>
+					<span data-i18n="results_ref_nu_label">N = 5×10⁻¹³</span>
+				</div>
+			</div>
 
-    <div class="canvas-wrap" id="n-canvas-wrap">
-      <canvas id="n-canvas" role="img" aria-label="Distribuição de N"></canvas>
-    </div>
+			<div class="canvas-wrap" id="n-canvas-wrap">
+				<canvas id="n-canvas" role="img" aria-label="Distribuição de N"></canvas>
+			</div>
 
-    <!-- three probability rows -->
-    <table class="prob-table">
-      <tr>
-        <td class="prob-label" data-i18n="results_p_not_alone_mw">P(não sozinhos na Via Láctea) — área à direita de N = 1</td>
-        <td class="prob-value color-not-alone-mw" id="prob-not-alone-mw">—</td>
-      </tr>
-      <tr>
-        <td class="prob-label" data-i18n="results_p_alone_mw">P(sozinhos na Via Láctea) — área à esquerda de N = 1</td>
-        <td class="prob-value color-alone-mw" id="prob-alone-mw">—</td>
-      </tr>
-      <tr>
-        <td class="prob-label" data-i18n="results_p_alone_univ">P(sozinhos no universo observável) — área à esquerda de N = 5×10⁻¹³</td>
-        <td class="prob-value color-alone-univ" id="prob-alone-univ">—</td>
-      </tr>
-    </table>
+			<!-- three probability rows -->
+			<table class="prob-table">
+				<tr>
+					<td class="prob-label" data-i18n="results_p_not_alone_mw">P(não sozinhos na Via Láctea) — área à
+						direita de N = 1</td>
+					<td class="prob-value color-not-alone-mw" id="prob-not-alone-mw">—</td>
+				</tr>
+				<tr>
+					<td class="prob-label" data-i18n="results_p_alone_mw">P(sozinhos na Via Láctea) — área à esquerda de
+						N = 1</td>
+					<td class="prob-value color-alone-mw" id="prob-alone-mw">—</td>
+				</tr>
+				<tr>
+					<td class="prob-label" data-i18n="results_p_alone_univ">P(sozinhos no universo observável) — área à
+						esquerda de N = 5×10⁻¹³</td>
+					<td class="prob-value color-alone-univ" id="prob-alone-univ">—</td>
+				</tr>
+			</table>
 
-    <p class="mc-note" data-i18n="results_mc_note">Distribuição calculada por Monte Carlo (50 000 amostras) · curva suavizada por KDE</p>
-  </div>
+			<p class="mc-note" data-i18n="results_mc_note">Distribuição calculada por Monte Carlo (50 000 amostras) ·
+				curva suavizada por KDE</p>
+		</div>
 
-  <!-- community note: shown when community curve absent -->
-  <div class="result-card" id="comm-note-card">
-    <p class="community-note" data-i18n="results_comm_few">Ainda há poucas respostas para exibir a distribuição da comunidade. Volte mais tarde.</p>
-  </div>
+		<!-- community note: shown when community curve absent -->
+		<div class="result-card" id="comm-note-card">
+			<p class="community-note" data-i18n="results_comm_few">Ainda há poucas respostas para exibir a distribuição
+				da comunidade. Volte mais tarde.</p>
+		</div>
 
-  <!-- param summary -->
-  <div class="result-card">
-    <h2 data-i18n="results_summary">Resumo dos seus parâmetros</h2>
-    <table class="param-table">
-      <thead>
-        <tr>
-          <th class="param-sym"></th>
-          <th data-i18n="results_th_param">Parâmetro</th>
-          <th data-i18n="results_th_mode">Moda · IQR</th>
-        </tr>
-      </thead>
-      <tbody id="param-tbody"></tbody>
-    </table>
-  </div>
+		<!-- param summary -->
+		<div class="result-card">
+			<h2 data-i18n="results_summary">Resumo dos seus parâmetros</h2>
+			<table class="param-table">
+				<thead>
+					<tr>
+						<th class="param-sym"></th>
+						<th data-i18n="results_th_param">Parâmetro</th>
+						<th data-i18n="results_th_mode">Moda · IQR</th>
+					</tr>
+				</thead>
+				<tbody id="param-tbody"></tbody>
+			</table>
+		</div>
 
-  <!-- actions -->
-  <div class="action-row">
-    <a class="action-btn primary" id="share-btn" href="#">↗ <span data-i18n="results_share">Compartilhar resultados</span></a>
-    <a class="action-btn secondary" id="redo-btn" href="#">↺ <span data-i18n="results_redo">Refazer levantamento</span></a>
-  </div>
-  <p class="footer-note" data-i18n="results_footer">Obrigado pela participação.</p>
-</div>
+		<!-- actions -->
+		<div class="action-row">
+			<a class="action-btn primary" id="share-btn" href="#">↗ <span data-i18n="results_share">Compartilhar
+					resultados</span></a>
+			<a class="action-btn secondary" id="redo-btn" href="#">↺ <span data-i18n="results_redo">Refazer
+					levantamento</span></a>
+		</div>
+		<p class="footer-note" data-i18n="results_footer">Obrigado pela participação.</p>
+		<p class="footer-note" style="margin-top:.5rem">
+			<a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener" id="source-link"
+				style="color:#888780;text-underline-offset:3px">
+				↗ <span data-i18n="results_source">Código-fonte e mais informações</span>
+			</a>
+		</p>
+	</div>
 
-<script>
-/* ── tick helpers ── */
-function superscript(n){
-  const map={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
-  return String(n).split('').map(c=>map[c]||c).join('');
-}
-function formatLogTick(e){
-  if(e===-3)return'0.001';if(e===-2)return'0.01';if(e===-1)return'0.1';
-  if(e===0)return'1';if(e===1)return'10';if(e===2)return'100';if(e===3)return'1000';
-  return'10'+superscript(e);
-}
-function fmtV(v){
-  if(!isFinite(v)||v===0)return'—';
-  const a=Math.abs(v);
-  if(a>=1e4||(a>0&&a<0.01))return v.toExponential(1).replace('e+','e');
-  if(a>=100)return v.toFixed(0);if(a>=10)return v.toFixed(1);
-  if(a>=1)return v.toFixed(2);if(a>=0.1)return v.toFixed(3);
-  return v.toFixed(4);
-}
-function fmtPct(p){
-  if(p===null||!isFinite(p))return'—';
-  if(p>=0.9995)return'>99.9%';
-  if(p<=0.0005)return'<0.1%';
-  return(p*100).toFixed(1)+'%';
-}
+	<script>
+		/* ── tick helpers ── */
+		function superscript(n) {
+			const map = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+			return String(n).split('').map(c => map[c] || c).join('');
+		}
+		function formatLogTick(e) {
+			if (e === -3) return '0.001'; if (e === -2) return '0.01'; if (e === -1) return '0.1';
+			if (e === 0) return '1'; if (e === 1) return '10'; if (e === 2) return '100'; if (e === 3) return '1000';
+			return '10' + superscript(e);
+		}
+		function fmtV(v) {
+			if (!isFinite(v) || v === 0) return '—';
+			const a = Math.abs(v);
+			if (a >= 1e4 || (a > 0 && a < 0.01)) return v.toExponential(1).replace('e+', 'e');
+			if (a >= 100) return v.toFixed(0); if (a >= 10) return v.toFixed(1);
+			if (a >= 1) return v.toFixed(2); if (a >= 0.1) return v.toFixed(3);
+			return v.toFixed(4);
+		}
+		function fmtPct(p) {
+			if (p === null || !isFinite(p)) return '—';
+			if (p >= 0.9995) return '>99.9%';
+			if (p <= 0.0005) return '<0.1%';
+			return (p * 100).toFixed(1) + '%';
+		}
 
-/* ── numerical integration of discrete PDF ── */
-function integratePDF(grid, pdf, tLo, tHi){
-  let sum=0;
-  for(let i=0;i<grid.length-1;i++){
-    const t0=grid[i],t1=grid[i+1];
-    if(t1<=tLo||t0>=tHi) continue;
-    const lo=Math.max(t0,tLo),hi=Math.min(t1,tHi);
-    const frac=(hi-lo)/(t1-t0);
-    sum+=0.5*(pdf[i]+pdf[i+1])*(t1-t0)*frac;
-  }
-  return sum;
-}
-function probAbove(dist,logT){ return integratePDF(dist.log_N_grid,dist.pdf,logT,Infinity)/Math.max(1e-30,integratePDF(dist.log_N_grid,dist.pdf,-Infinity,Infinity)); }
-function probBelow(dist,logT){ return integratePDF(dist.log_N_grid,dist.pdf,-Infinity,logT)/Math.max(1e-30,integratePDF(dist.log_N_grid,dist.pdf,-Infinity,Infinity)); }
+		/* ── numerical integration of discrete PDF ── */
+		function integratePDF(grid, pdf, tLo, tHi) {
+			let sum = 0;
+			for (let i = 0; i < grid.length - 1; i++) {
+				const t0 = grid[i], t1 = grid[i + 1];
+				if (t1 <= tLo || t0 >= tHi) continue;
+				const lo = Math.max(t0, tLo), hi = Math.min(t1, tHi);
+				const frac = (hi - lo) / (t1 - t0);
+				sum += 0.5 * (pdf[i] + pdf[i + 1]) * (t1 - t0) * frac;
+			}
+			return sum;
+		}
+		function probAbove(dist, logT) { return integratePDF(dist.log_N_grid, dist.pdf, logT, Infinity) / Math.max(1e-30, integratePDF(dist.log_N_grid, dist.pdf, -Infinity, Infinity)); }
+		function probBelow(dist, logT) { return integratePDF(dist.log_N_grid, dist.pdf, -Infinity, logT) / Math.max(1e-30, integratePDF(dist.log_N_grid, dist.pdf, -Infinity, Infinity)); }
 
-/* ── draw chart ── */
-function drawChart(yourDist, commDist){
-  const canvas=document.getElementById('n-canvas');
-  const wrap  =document.getElementById('n-canvas-wrap');
-  const dpr   =window.devicePixelRatio||1;
-  const cssW  =wrap.clientWidth, cssH=220;
-  canvas.style.width=cssW+'px'; canvas.style.height=cssH+'px';
-  canvas.width=Math.round(cssW*dpr); canvas.height=Math.round(cssH*dpr);
+		/* ── draw chart ── */
+		function drawChart(yourDist, commDist) {
+			const canvas = document.getElementById('n-canvas');
+			const wrap = document.getElementById('n-canvas-wrap');
+			const dpr = window.devicePixelRatio || 1;
+			const cssW = wrap.clientWidth, cssH = 220;
+			canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+			canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
 
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height;
-  ctx.clearRect(0,0,W,H);
+			const ctx = canvas.getContext('2d');
+			const W = canvas.width, H = canvas.height;
+			ctx.clearRect(0, 0, W, H);
 
-  const dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  /* extra bottom padding to fit axis label */
-  const PAD={top:10*dpr, right:14*dpr, bottom:42*dpr, left:14*dpr};
-  const pw=W-PAD.left-PAD.right, ph=H-PAD.top-PAD.bottom;
+			const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+			/* extra bottom padding to fit axis label */
+			const PAD = { top: 10 * dpr, right: 14 * dpr, bottom: 42 * dpr, left: 14 * dpr };
+			const pw = W - PAD.left - PAD.right, ph = H - PAD.top - PAD.bottom;
 
-  const REF_MW  =0;
-  const REF_UNIV=Math.log10(5e-13);  /* ≈ -12.301 */
+			const REF_MW = 0;
+			const REF_UNIV = Math.log10(5e-13);  /* ≈ -12.301 */
 
-  /* x-axis range: data + both ref lines */
-  const grids=[yourDist.log_N_grid];
-  if(commDist) grids.push(commDist.log_N_grid);
-  const allT=grids.flat();
-  const tMin=Math.min(Math.min(...allT), REF_UNIV-1);
-  const tMax=Math.max(Math.max(...allT), REF_MW+1);
-  const tSpan=tMax-tMin;
+			/* x-axis range: data + both ref lines */
+			const grids = [yourDist.log_N_grid];
+			if (commDist) grids.push(commDist.log_N_grid);
+			const allT = grids.flat();
+			const tMin = Math.min(Math.min(...allT), REF_UNIV - 1);
+			const tMax = Math.max(Math.max(...allT), REF_MW + 1);
+			const tSpan = tMax - tMin;
 
-  function xpx(t){ return PAD.left+((t-tMin)/tSpan)*pw; }
-  function ypxF(y,ymax){ return PAD.top+ph-(Math.min(y,ymax)/ymax)*ph; }
+			function xpx(t) { return PAD.left + ((t - tMin) / tSpan) * pw; }
+			function ypxF(y, ymax) { return PAD.top + ph - (Math.min(y, ymax) / ymax) * ph; }
 
-  function maxInRange(dist){
-    let m=0;
-    dist.log_N_grid.forEach((t,i)=>{ if(t>=tMin&&t<=tMax&&dist.pdf[i]>m) m=dist.pdf[i]; });
-    return m;
-  }
-  let ymax=maxInRange(yourDist);
-  if(commDist) ymax=Math.max(ymax,maxInRange(commDist));
-  if(ymax===0) ymax=1;
-  ymax*=1.18;
+			function maxInRange(dist) {
+				let m = 0;
+				dist.log_N_grid.forEach((t, i) => { if (t >= tMin && t <= tMax && dist.pdf[i] > m) m = dist.pdf[i]; });
+				return m;
+			}
+			let ymax = maxInRange(yourDist);
+			if (commDist) ymax = Math.max(ymax, maxInRange(commDist));
+			if (ymax === 0) ymax = 1;
+			ymax *= 1.18;
 
-  function drawCurve(dist, cFill, cStroke){
-    const g=dist.log_N_grid, p=dist.pdf;
-    ctx.beginPath(); ctx.moveTo(xpx(g[0]),ypxF(0,ymax));
-    for(let i=0;i<g.length;i++) ctx.lineTo(xpx(g[i]),ypxF(p[i],ymax));
-    ctx.lineTo(xpx(g[g.length-1]),ypxF(0,ymax));
-    ctx.closePath(); ctx.fillStyle=cFill; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(xpx(g[0]),ypxF(p[0],ymax));
-    for(let i=1;i<g.length;i++) ctx.lineTo(xpx(g[i]),ypxF(p[i],ymax));
-    ctx.strokeStyle=cStroke; ctx.lineWidth=1.8*dpr; ctx.stroke();
-  }
+			function drawCurve(dist, cFill, cStroke) {
+				const g = dist.log_N_grid, p = dist.pdf;
+				ctx.beginPath(); ctx.moveTo(xpx(g[0]), ypxF(0, ymax));
+				for (let i = 0; i < g.length; i++) ctx.lineTo(xpx(g[i]), ypxF(p[i], ymax));
+				ctx.lineTo(xpx(g[g.length - 1]), ypxF(0, ymax));
+				ctx.closePath(); ctx.fillStyle = cFill; ctx.fill();
+				ctx.beginPath(); ctx.moveTo(xpx(g[0]), ypxF(p[0], ymax));
+				for (let i = 1; i < g.length; i++) ctx.lineTo(xpx(g[i]), ypxF(p[i], ymax));
+				ctx.strokeStyle = cStroke; ctx.lineWidth = 1.8 * dpr; ctx.stroke();
+			}
 
-  /* community (reddish) behind, user (greenish) in front */
-  if(commDist){
-    drawCurve(commDist,
-      dark?'rgba(200,80,40,.22)':'rgba(180,60,20,.18)',
-      dark?'rgba(210,90,50,.88)':'rgba(170,55,20,.82)');
-  }
-  drawCurve(yourDist,
-    dark?'rgba(30,170,110,.28)':'rgba(20,150,90,.22)',
-    dark?'rgba(30,190,120,.92)':'rgba(15,140,80,.88)');
+			/* community (reddish) behind, user (greenish) in front */
+			if (commDist) {
+				drawCurve(commDist,
+					dark ? 'rgba(200,80,40,.22)' : 'rgba(180,60,20,.18)',
+					dark ? 'rgba(210,90,50,.88)' : 'rgba(170,55,20,.82)');
+			}
+			drawCurve(yourDist,
+				dark ? 'rgba(30,170,110,.28)' : 'rgba(20,150,90,.22)',
+				dark ? 'rgba(30,190,120,.92)' : 'rgba(15,140,80,.88)');
 
-  /* ── reference lines ── */
-  function drawRefLine(t, color, label){
-    const px=xpx(t);
-    if(px<PAD.left-2||px>W-PAD.right+2) return;
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(px,PAD.top); ctx.lineTo(px,PAD.top+ph);
-    ctx.strokeStyle=color; ctx.lineWidth=1.5*dpr;
-    ctx.setLineDash([4*dpr,3*dpr]); ctx.stroke(); ctx.setLineDash([]);
-    const fPx=Math.max(9,Math.round(9*dpr));
-    ctx.font=`500 ${fPx}px system-ui,-apple-system,sans-serif`;
-    ctx.fillStyle=color; ctx.textBaseline='bottom'; ctx.textAlign='left';
-    ctx.fillText(label, px+3*dpr, PAD.top+ph-2*dpr);
-    ctx.restore();
-  }
-  drawRefLine(REF_MW,
-    dark?'rgba(215,155,50,.92)':'rgba(175,110,20,.88)',
-    'N=1');
-  drawRefLine(REF_UNIV,
-    dark?'rgba(110,140,225,.92)':'rgba(50,80,180,.88)',
-    'N=5×10⁻¹³');
+			/* ── reference lines ── */
+			function drawRefLine(t, color, label) {
+				const px = xpx(t);
+				if (px < PAD.left - 2 || px > W - PAD.right + 2) return;
+				ctx.save();
+				ctx.beginPath(); ctx.moveTo(px, PAD.top); ctx.lineTo(px, PAD.top + ph);
+				ctx.strokeStyle = color; ctx.lineWidth = 1.5 * dpr;
+				ctx.setLineDash([4 * dpr, 3 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+				const fPx = Math.max(9, Math.round(9 * dpr));
+				ctx.font = `500 ${fPx}px system-ui,-apple-system,sans-serif`;
+				ctx.fillStyle = color; ctx.textBaseline = 'bottom'; ctx.textAlign = 'left';
+				ctx.fillText(label, px + 3 * dpr, PAD.top + ph - 2 * dpr);
+				ctx.restore();
+			}
+			drawRefLine(REF_MW,
+				dark ? 'rgba(215,155,50,.92)' : 'rgba(175,110,20,.88)',
+				'N=1');
+			drawRefLine(REF_UNIV,
+				dark ? 'rgba(110,140,225,.92)' : 'rgba(50,80,180,.88)',
+				'N=5×10⁻¹³');
 
-  /* ── axis line ── */
-  const cAx=dark?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)';
-  ctx.beginPath();
-  ctx.moveTo(PAD.left,PAD.top+ph); ctx.lineTo(PAD.left+pw,PAD.top+ph);
-  ctx.strokeStyle=cAx; ctx.lineWidth=dpr; ctx.stroke();
+			/* ── axis line ── */
+			const cAx = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
+			ctx.beginPath();
+			ctx.moveTo(PAD.left, PAD.top + ph); ctx.lineTo(PAD.left + pw, PAD.top + ph);
+			ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
 
-  /* ── tick labels ── */
-  const fPx=Math.max(10,Math.round(10.5*dpr));
-  const cTxt=dark?'rgba(255,255,255,.38)':'rgba(0,0,0,.38)';
-  ctx.fillStyle=cTxt;
-  ctx.font=`${fPx}px system-ui,-apple-system,sans-serif`;
-  ctx.textAlign='center'; ctx.textBaseline='top';
-  const tickY=PAD.top+ph+4*dpr;
-  const range=Math.ceil(tMax)-Math.floor(tMin);
-  const step=range<=10?1:range<=20?2:range<=50?5:10;
-  const minGap=34*dpr;
-  let lastPx=-Infinity;
-  for(let e=Math.floor(tMin);e<=Math.ceil(tMax);e+=step){
-    const px=xpx(e);
-    if(px-lastPx<minGap||px<PAD.left||px>W-PAD.right) continue;
-    lastPx=px;
-    ctx.fillText(formatLogTick(e),px,tickY);
-    ctx.beginPath(); ctx.moveTo(px,PAD.top+ph); ctx.lineTo(px,PAD.top+ph+3*dpr);
-    ctx.strokeStyle=cAx; ctx.lineWidth=dpr; ctx.stroke();
-  }
+			/* ── tick labels ── */
+			const fPx = Math.max(10, Math.round(10.5 * dpr));
+			const cTxt = dark ? 'rgba(255,255,255,.38)' : 'rgba(0,0,0,.38)';
+			ctx.fillStyle = cTxt;
+			ctx.font = `${fPx}px system-ui,-apple-system,sans-serif`;
+			ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+			const tickY = PAD.top + ph + 4 * dpr;
+			const range = Math.ceil(tMax) - Math.floor(tMin);
+			const step = range <= 10 ? 1 : range <= 20 ? 2 : range <= 50 ? 5 : 10;
+			const minGap = 34 * dpr;
+			let lastPx = -Infinity;
+			for (let e = Math.floor(tMin); e <= Math.ceil(tMax); e += step) {
+				const px = xpx(e);
+				if (px - lastPx < minGap || px < PAD.left || px > W - PAD.right) continue;
+				lastPx = px;
+				ctx.fillText(formatLogTick(e), px, tickY);
+				ctx.beginPath(); ctx.moveTo(px, PAD.top + ph); ctx.lineTo(px, PAD.top + ph + 3 * dpr);
+				ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
+			}
 
-  /* ── x-axis label "N" centred below ticks ── */
-  const labelFPx=Math.max(11,Math.round(11*dpr));
-  ctx.font=`italic ${labelFPx}px system-ui,-apple-system,sans-serif`;
-  ctx.fillStyle=cTxt; ctx.textAlign='center'; ctx.textBaseline='bottom';
-  ctx.fillText('N  (escala log₁₀)', PAD.left+pw/2, H-2*dpr);
-}
+			/* ── x-axis label "N" centred below ticks ── */
+			const labelFPx = Math.max(11, Math.round(11 * dpr));
+			ctx.font = `italic ${labelFPx}px system-ui,-apple-system,sans-serif`;
+			ctx.fillStyle = cTxt; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+			ctx.fillText('N  (escala log₁₀)', PAD.left + pw / 2, H - 2 * dpr);
+		}
 
-/* ── main async block ── */
-(async function(){
-  const supported=['pt','en','es'];
-  const qp=new URLSearchParams(location.search);
-  const ul=qp.get('lang'), bl=(navigator.language||'pt').slice(0,2);
-  const lang=supported.includes(ul)?ul:supported.includes(bl)?bl:'pt';
-  document.documentElement.lang=lang==='pt'?'pt-BR':lang;
+		/* ── main async block ── */
+		(async function () {
+			const supported = ['pt', 'en', 'es'];
+			const qp = new URLSearchParams(location.search);
+			const ul = qp.get('lang'), bl = (navigator.language || 'pt').slice(0, 2);
+			const lang = supported.includes(ul) ? ul : supported.includes(bl) ? bl : 'pt';
+			document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
 
-  document.getElementById('redo-btn').onclick=function(e){
-    e.preventDefault();
-    Object.keys(localStorage).filter(k=>k.startsWith('drake-answer-')).forEach(k=>localStorage.removeItem(k));
-    sessionStorage.removeItem('drake_session');
-    location.href=`consent.html?lang=${lang}`;
-  };
+			document.getElementById('redo-btn').onclick = function (e) {
+				e.preventDefault();
+				Object.keys(localStorage).filter(k => k.startsWith('drake-answer-')).forEach(k => localStorage.removeItem(k));
+				sessionStorage.removeItem('drake_session');
+				location.href = `consent.html?lang=${lang}`;
+			};
 
-  const session_id=qp.get('session')||sessionStorage.getItem('drake_session');
-  const fetches=[
-    fetch(`/i18n/${lang}.json`).then(r=>r.json()).catch(()=>({})),
-    fetch('/questions.json').then(r=>r.json()).catch(()=>[]),
-    session_id
-      ? fetch(`/api/results/${session_id}/computed`).then(r=>r.ok?r.json():null).catch(()=>null)
-      : Promise.resolve(null),
-    fetch('/api/aggregate/computed').then(r=>r.ok?r.json():null).catch(()=>null),
-  ];
-  let S={}, questions=[], individualN=null, communityData=null;
-  [S,questions,individualN,communityData]=await Promise.all(fetches);
+			const session_id = qp.get('session') || sessionStorage.getItem('drake_session');
+			const fetches = [
+				fetch(`/i18n/${lang}.json`).then(r => r.json()).catch(() => ({})),
+				fetch('/questions.json').then(r => r.json()).catch(() => []),
+				session_id
+					? fetch(`/api/results/${session_id}/computed`).then(r => r.ok ? r.json() : null).catch(() => null)
+					: Promise.resolve(null),
+				fetch('/api/aggregate/computed').then(r => r.ok ? r.json() : null).catch(() => null),
+			];
+			let S = {}, questions = [], individualN = null, communityData = null;
+			[S, questions, individualN, communityData] = await Promise.all(fetches);
 
-  /* i18n */
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const k=el.dataset.i18n; if(S[k]!==undefined) el.textContent=S[k];
-  });
-  document.body.classList.add('ready');
+			/* i18n */
+			document.querySelectorAll('[data-i18n]').forEach(el => {
+				const k = el.dataset.i18n; if (S[k] !== undefined) el.textContent = S[k];
+			});
+			document.body.classList.add('ready');
 
-  /* ── individual N ── */
-  const yourDist=individualN?.N_distribution;
-  const Z90=1.2816, SIG_MIN=0.02;
-  const REF_MW=0, REF_UNIV=Math.log10(5e-13);
+			/* ── individual N ── */
+			const yourDist = individualN?.N_distribution;
+			const Z90 = 1.2816, SIG_MIN = 0.02;
+			const REF_MW = 0, REF_UNIV = Math.log10(5e-13);
 
-  if(yourDist&&!yourDist.error){
-    document.getElementById('stat-median').textContent = fmtV(yourDist.N_median);
-    document.getElementById('stat-iqr').textContent    =
-      `[${fmtV(yourDist.N_q25)}, ${fmtV(yourDist.N_q75)}]`;
-    document.getElementById('stat-90').textContent     =
-      `[${fmtV(yourDist.N_q05)}, ${fmtV(yourDist.N_q95)}]`;
+			if (yourDist && !yourDist.error) {
+				document.getElementById('stat-median').textContent = fmtV(yourDist.N_median);
+				document.getElementById('stat-iqr').textContent =
+					`[${fmtV(yourDist.N_q25)}, ${fmtV(yourDist.N_q75)}]`;
+				document.getElementById('stat-90').textContent =
+					`[${fmtV(yourDist.N_q05)}, ${fmtV(yourDist.N_q95)}]`;
 
-    const pNotAloneMW = probAbove(yourDist, REF_MW);
-    const pAloneMW    = probBelow(yourDist, REF_MW);
-    const pAloneUniv  = probBelow(yourDist, REF_UNIV);
+				const pNotAloneMW = probAbove(yourDist, REF_MW);
+				const pAloneMW = probBelow(yourDist, REF_MW);
+				const pAloneUniv = probBelow(yourDist, REF_UNIV);
 
-    document.getElementById('prob-not-alone-mw').textContent = fmtPct(pNotAloneMW);
-    document.getElementById('prob-alone-mw').textContent     = fmtPct(pAloneMW);
-    document.getElementById('prob-alone-univ').textContent   = fmtPct(pAloneUniv);
-  } else {
-    const reason=yourDist?.error||(S.results_n_na_reason||'Uma ou mais perguntas foram puladas');
-    document.getElementById('stat-median').textContent=S.results_n_na||'N/A';
-    document.getElementById('stat-iqr').textContent=reason;
-  }
+				document.getElementById('prob-not-alone-mw').textContent = fmtPct(pNotAloneMW);
+				document.getElementById('prob-alone-mw').textContent = fmtPct(pAloneMW);
+				document.getElementById('prob-alone-univ').textContent = fmtPct(pAloneUniv);
+			} else {
+				const reason = yourDist?.error || (S.results_n_na_reason || 'Uma ou mais perguntas foram puladas');
+				document.getElementById('stat-median').textContent = S.results_n_na || 'N/A';
+				document.getElementById('stat-iqr').textContent = reason;
+			}
 
-  /* ── community ── */
-  const MIN_SESSIONS=3;
-  let commDist=null;
-  if(communityData?.community_N&&!communityData.community_N.error
-     &&communityData.n_sessions>=MIN_SESSIONS){
-    commDist=communityData.community_N;
-    document.getElementById('comm-legend-item').style.display='';
-    document.getElementById('comm-note-card').style.display='none';
-  }
+			/* ── community ── */
+			const MIN_SESSIONS = 3;
+			let commDist = null;
+			if (communityData?.community_N && !communityData.community_N.error
+				&& communityData.n_sessions >= MIN_SESSIONS) {
+				commDist = communityData.community_N;
+				document.getElementById('comm-legend-item').style.display = '';
+				document.getElementById('comm-note-card').style.display = 'none';
+			}
 
-  /* ── chart ── */
-  if(yourDist&&!yourDist.error){
-    drawChart(yourDist,commDist);
-    window.addEventListener('resize',()=>drawChart(yourDist,commDist));
-  }
+			/* ── chart ── */
+			if (yourDist && !yourDist.error) {
+				drawChart(yourDist, commDist);
+				window.addEventListener('resize', () => drawChart(yourDist, commDist));
+			}
 
-  /* ── param table ── */
-  const tbody=document.getElementById('param-tbody');
-  const skippedLabel=S.results_skipped||'pulado';
-  const serverAnswers={};
-  if(individualN?.answers) individualN.answers.forEach(a=>{serverAnswers[a.question_id]=a;});
-  function getAnswer(qid){
-    if(serverAnswers[qid]){const a=serverAnswers[qid];return{tLo:a.t_lo,tMode:a.t_mode,tHi:a.t_hi,skipped:a.skipped,axisMode:a.axis_mode};}
-    const raw=localStorage.getItem(`drake-answer-${qid}`);
-    return raw?JSON.parse(raw):null;
-  }
-  questions.forEach(Q=>{
-    const row=document.createElement('tr');
-    const d=getAnswer(Q.id);
-    const paramName=S[Q.paramKey]||Q.id;
-    if(!d||d.skipped){
-      row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
-        `<td>${paramName}</td>`+
-        `<td><span class="skipped-tag">${skippedLabel}</span></td>`;
-    } else {
-      const isLog=Q.axisMode!=='lin';
-      const modeVal=isLog?Math.pow(10,d.tMode):d.tMode;
-      const q25T=d.tMode-0.6745*Math.max(SIG_MIN,(d.tMode-d.tLo)/Z90);
-      const q75T=d.tMode+0.6745*Math.max(SIG_MIN,(d.tHi-d.tMode)/Z90);
-      const q25Val=isLog?Math.pow(10,q25T):q25T;
-      const q75Val=isLog?Math.pow(10,q75T):q75T;
-      row.innerHTML=`<td class="param-sym">${Q.symbolHTML}</td>`+
-        `<td>${paramName}</td>`+
-        `<td>${fmtV(modeVal)} · [${fmtV(q25Val)}, ${fmtV(q75Val)}]</td>`;
-    }
-    tbody.appendChild(row);
-  });
-})();
-</script>
+			/* ── param table ── */
+			const tbody = document.getElementById('param-tbody');
+			const skippedLabel = S.results_skipped || 'pulado';
+			const serverAnswers = {};
+			if (individualN?.answers) individualN.answers.forEach(a => { serverAnswers[a.question_id] = a; });
+			function getAnswer(qid) {
+				if (serverAnswers[qid]) { const a = serverAnswers[qid]; return { tLo: a.t_lo, tMode: a.t_mode, tHi: a.t_hi, skipped: a.skipped, axisMode: a.axis_mode }; }
+				const raw = localStorage.getItem(`drake-answer-${qid}`);
+				return raw ? JSON.parse(raw) : null;
+			}
+			questions.forEach(Q => {
+				const row = document.createElement('tr');
+				const d = getAnswer(Q.id);
+				const paramName = S[Q.paramKey] || Q.id;
+				if (!d || d.skipped) {
+					row.innerHTML = `<td class="param-sym">${Q.symbolHTML}</td>` +
+						`<td>${paramName}</td>` +
+						`<td><span class="skipped-tag">${skippedLabel}</span></td>`;
+				} else {
+					const isLog = Q.axisMode !== 'lin';
+					const modeVal = isLog ? Math.pow(10, d.tMode) : d.tMode;
+					const q25T = d.tMode - 0.6745 * Math.max(SIG_MIN, (d.tMode - d.tLo) / Z90);
+					const q75T = d.tMode + 0.6745 * Math.max(SIG_MIN, (d.tHi - d.tMode) / Z90);
+					const q25Val = isLog ? Math.pow(10, q25T) : q25T;
+					const q75Val = isLog ? Math.pow(10, q75T) : q75T;
+					row.innerHTML = `<td class="param-sym">${Q.symbolHTML}</td>` +
+						`<td>${paramName}</td>` +
+						`<td>${fmtV(modeVal)} · [${fmtV(q25Val)}, ${fmtV(q75Val)}]</td>`;
+				}
+				tbody.appendChild(row);
+			});
+		})();
+	</script>
 </body>
+
 </html>
