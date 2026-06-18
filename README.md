@@ -44,7 +44,7 @@ $N$ = the number of civilizations in the Milky Way galaxy with which communicati
 
 and
 
-$N_{∗}$ = the number of stars in our Galaxy.
+$N_{∗}$ = Number of stars in the Milky Way Galaxy
 
 $f_{p}$ = the fraction of those stars that have planets.
 
@@ -56,7 +56,7 @@ $f_{i}$ = the fraction of planets with life that go on to develop intelligent li
 
 $f_{c}$ = the fraction of civilizations that develop a technology that releases detectable signs of their existence into space.
 
-$f_{L}$ = the fraction of a star's lifetime for which such civilizations release detectable signals into space.
+$f_{L}$ = fraction of a planetary lifetime graced by a technological civilization
 
 The Drake equation is usually computed using point estimates for every parameter. However, we are not certain of the value of many parameters, with estimates varying by many orders of magnitude. Following Sandberg, Drexler, and Toby Ord's [Dissolving the Fermi Paradox](https://arxiv.org/abs/1806.02404), it seems better to use probability density functions and get a distribution for the possible values of $N$.
 
