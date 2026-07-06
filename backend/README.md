@@ -17,7 +17,7 @@ drake-survey/
 ├── index.html
 ├── intro.html
 ├── consent.html
-├── survey_question_page.html
+├── survey.html
 ├── results.html
 ├── questions.json
 ├── i18n/
@@ -58,7 +58,7 @@ const { session_id } = await res.json();
 sessionStorage.setItem('drake_session', session_id);
 ```
 
-### survey_question_page.html — replace saveDraft() body:
+### survey.html — replace saveDraft() body:
 ```javascript
 async function saveDraft() {
   const session_id = sessionStorage.getItem('drake_session');
