@@ -1,6 +1,6 @@
-# N-Elicit
+# Drakelicit
 
-N-Elicit is a small web application for expert elicitation around the [Drake equation](https://en.wikipedia.org/wiki/Drake_equation). Instead of asking for one-point estimates, it asks each respondent to express uncertainty as a distribution for every parameter and then combines those answers into a distribution for the possible number of detectable civilizations in the Milky Way.
+Drakelicit is a small web application for expert elicitation around the [Drake equation](https://en.wikipedia.org/wiki/Drake_equation). Instead of asking for one-point estimates, it asks each respondent to express uncertainty as a distribution for every parameter and then combines those answers into a distribution for the possible number of detectable civilizations in the Milky Way.
 
 The interface is intentionally simple: a static HTML front end guides the user through the survey, and a FastAPI backend stores sessions, answers, and aggregate results.
 
