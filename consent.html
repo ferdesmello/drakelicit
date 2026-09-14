@@ -145,7 +145,7 @@ async function startSurvey(){
     console.warn('Consent API unavailable, continuing offline:', e.message);
     sessionStorage.removeItem('drake_session');
   }
-  location.href = `survey.html?q=0&lang=${lang}`;
+  location.href = `context.html?lang=${lang}`;
 }
 </script>
 </body>

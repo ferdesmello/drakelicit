@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sobre você e suas crenças</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#f5f4f0;color:#1a1a18;
+  min-height:100vh;display:flex;justify-content:center;
+  padding:2.5rem 1.25rem;
+  opacity:0;transition:opacity .15s ease;
+}
+body.ready{opacity:1}
+#wrap{width:100%;max-width:580px}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#888780;text-decoration:none;margin-bottom:2rem}
+.back-link:hover{color:#5f5e5a}
+h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
+.subtitle{font-size:15px;line-height:1.65;color:#5f5e5a;margin-bottom:1.75rem}
+
+.section-card{background:#fff;border:0.5px solid #d3d1c7;border-radius:12px;padding:1.25rem 1.25rem 1.4rem;margin-bottom:1.1rem}
+.section-card h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888780;margin-bottom:.5rem}
+.section-note{font-size:12.5px;line-height:1.6;color:#888780;margin-bottom:1rem}
+
+.field{margin-bottom:1rem}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:13px;color:#5f5e5a;margin-bottom:.4rem}
+.field select{
+  width:100%;padding:10px 12px;font-size:15px;font-family:inherit;
+  background:#fff;border:0.5px solid #d3d1c7;border-radius:8px;
+  color:#1a1a18;cursor:pointer;
+}
+
+.belief-q{margin-bottom:1.3rem}
+.belief-q:last-child{margin-bottom:0}
+.belief-q .q-text{font-size:14px;line-height:1.6;color:#1a1a18;margin-bottom:.6rem}
+.scale-row{display:flex;gap:6px;flex-wrap:wrap}
+.scale-btn{
+  flex:1 1 auto;min-width:64px;text-align:center;
+  padding:8px 6px;font-size:12px;line-height:1.3;font-family:inherit;
+  background:#fff;border:0.5px solid #d3d1c7;border-radius:8px;
+  cursor:pointer;color:#5f5e5a;
+  transition:border-color .15s,background .15s,color .15s;
+}
+.scale-btn:hover{border-color:#888780}
+.scale-btn.selected{border-color:#1a1a18;background:#1a1a18;color:#f5f4f0}
+
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem}
+.nav-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;font-size:15px;font-family:inherit;font-weight:500;background:#1a1a18;color:#f5f4f0;border:none;border-radius:8px;cursor:pointer;text-decoration:none;transition:opacity .15s}
+.nav-btn:hover{opacity:.85}
+.autosave{font-size:13px;color:#888780;opacity:0;transition:opacity .3s ease}
+
+@media(max-width:460px){
+  body{padding:1.25rem .9rem}
+  h1{font-size:20px}
+  .scale-btn{font-size:11px;padding:7px 4px;min-width:56px}
+  .nav-btn{padding:9px 16px;font-size:14px}
+}
+
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a18;color:#f1efe8}
+  .back-link{color:#666460}.back-link:hover{color:#888780}
+  .subtitle{color:#888780}
+  .section-card{background:#242422;border-color:#3a3a37}
+  .section-card h2{color:#666460}
+  .section-note{color:#666460}
+  .field label{color:#888780}
+  .field select{background:#242422;border-color:#3a3a37;color:#f1efe8}
+  .belief-q .q-text{color:#f1efe8}
+  .scale-btn{background:#242422;border-color:#3a3a37;color:#888780}
+  .scale-btn:hover{border-color:#666460}
+  .scale-btn.selected{border-color:#d4d2c8;background:#d4d2c8;color:#1a1a18}
+  .nav-btn{background:#d4d2c8;color:#1a1a18}
+  .autosave{color:#555450}
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <a class="back-link" id="back-link" href="consent.html">← <span data-i18n="context_back">Voltar</span></a>
+  <h1 data-i18n="context_title">Sobre você e suas crenças</h1>
+  <p class="subtitle" data-i18n="context_subtitle">Esta seção é opcional e totalmente anônima. Suas respostas aqui não afetam o cálculo da sua distribuição de N — servem apenas para caracterizar a amostra de participantes e para fins de pesquisa complementar. Pode deixar em branco qualquer item que preferir não responder.</p>
+
+  <div class="section-card">
+    <h2 data-i18n="context_area_section_title">Sua área de formação</h2>
+    <p class="section-note" data-i18n="context_official_classification_note">Usamos a classificação oficial de grandes áreas e áreas do CNPq; os termos aparecem em português por ser a nomenclatura oficial no Brasil. Nas apresentações, os resultados serão agregados apenas por grande área.</p>
+    <div class="field">
+      <label data-i18n="context_area_grande_label">Grande área (classificação CNPq)</label>
+      <select id="sel-grande">
+        <option value="" data-i18n="context_area_placeholder">Selecione…</option>
+      </select>
+    </div>
+    <div class="field" id="field-especifica" style="display:none">
+      <label data-i18n="context_area_especifica_label">Área específica (opcional)</label>
+      <select id="sel-especifica">
+        <option value="" data-i18n="context_area_placeholder">Selecione…</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2 data-i18n="context_beliefs_section_title">Suas crenças sobre vida no universo</h2>
+    <div id="beliefs-container"></div>
+  </div>
+
+  <div class="nav-row">
+    <span class="autosave" id="save-note" data-i18n="saved">● Rascunho salvo</span>
+    <a class="nav-btn" id="next-link" href="survey.html?q=0">
+      <span data-i18n="context_next">Continuar</span> →
+    </a>
+  </div>
+</div>
+
+<script>
+/*
+ * CNPq "Tabela de Áreas do Conhecimento" — grande área → área (2nd level only,
+ * not subárea/especialidade). Source: CNPq official table, cross-checked
+ * against FAPESP's mirror. Terms kept in Portuguese in all three languages
+ * since this is the official Brazilian nomenclature.
+ *
+ * "Outra / Multidisciplinar" is not in CNPq's original 8-área table but is
+ * commonly added as a 9th catch-all (FAPESP's own selector lists it as
+ * "Interdisciplinar") — useful here since astrobiology itself is
+ * multidisciplinary.
+ */
+const CNPQ_AREAS = {
+  "Ciências Exatas e da Terra": ["Matemática","Probabilidade e Estatística","Ciência da Computação","Astronomia","Física","Química","Geociências","Oceanografia"],
+  "Ciências Biológicas": ["Biologia Geral","Genética","Botânica","Zoologia","Ecologia","Morfologia","Fisiologia","Bioquímica","Biofísica","Farmacologia","Imunologia","Microbiologia","Parasitologia"],
+  "Engenharias": ["Engenharia Civil","Engenharia de Minas","Engenharia de Materiais e Metalúrgica","Engenharia Elétrica","Engenharia Mecânica","Engenharia Química","Engenharia Sanitária","Engenharia de Produção","Engenharia Nuclear","Engenharia de Transportes","Engenharia Naval e Oceânica","Engenharia Aeroespacial","Engenharia Biomédica"],
+  "Ciências da Saúde": ["Medicina","Odontologia","Farmácia","Enfermagem","Nutrição","Saúde Coletiva","Fonoaudiologia","Fisioterapia e Terapia Ocupacional","Educação Física"],
+  "Ciências Agrárias": ["Agronomia","Recursos Florestais e Engenharia Florestal","Engenharia Agrícola","Zootecnia","Medicina Veterinária","Recursos Pesqueiros e Engenharia de Pesca","Ciência e Tecnologia de Alimentos"],
+  "Ciências Sociais Aplicadas": ["Direito","Administração","Economia","Arquitetura e Urbanismo","Planejamento Urbano e Regional","Demografia","Ciência da Informação","Museologia","Comunicação","Serviço Social","Economia Doméstica","Desenho Industrial","Turismo"],
+  "Ciências Humanas": ["Filosofia","Sociologia","Antropologia","Arqueologia","História","Geografia","Psicologia","Educação","Ciência Política","Teologia"],
+  "Linguística, Letras e Artes": ["Linguística","Letras","Artes"],
+  "Outra / Multidisciplinar": []
+};
+
+/*
+ * Belief questions. Deliberately a flat array so trimming (per Fernando's
+ * "maybe 6 is too many, will test with fewer") is a one-line delete.
+ * scope: 'solar' | 'galaxy' | 'universe'   type: 'life' | 'intel'
+ */
+const BELIEF_QUESTIONS = [
+  { id: "life_solar",     scope: "solar",    type: "life",  key: "ctx_q_life_solar" },
+  { id: "life_galaxy",    scope: "galaxy",   type: "life",  key: "ctx_q_life_galaxy" },
+  { id: "intel_galaxy",   scope: "galaxy",   type: "intel", key: "ctx_q_intel_galaxy" },
+  { id: "life_universe",  scope: "universe", type: "life",  key: "ctx_q_life_universe" },
+  { id: "intel_universe", scope: "universe", type: "intel", key: "ctx_q_intel_universe" },
+];
+
+const SCALE = [
+  { v: "very_unlikely", key: "context_scale_very_unlikely" },
+  { v: "unlikely",      key: "context_scale_unlikely" },
+  { v: "unsure",        key: "context_scale_unsure" },
+  { v: "likely",        key: "context_scale_likely" },
+  { v: "very_likely",   key: "context_scale_very_likely" },
+];
+
+function buildAreaSelect() {
+  const sel = document.getElementById('sel-grande');
+  Object.keys(CNPQ_AREAS).forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    const field = document.getElementById('field-especifica');
+    const esp = document.getElementById('sel-especifica');
+    const placeholder = (window._S && window._S.context_area_placeholder) || 'Selecione…';
+    esp.innerHTML = `<option value="">${placeholder}</option>`;
+    const list = CNPQ_AREAS[sel.value] || [];
+    if (sel.value && list.length) {
+      list.forEach(a => {
+        const o = document.createElement('option');
+        o.value = a; o.textContent = a;
+        esp.appendChild(o);
+      });
+      field.style.display = '';
+    } else {
+      field.style.display = 'none';
+      esp.value = '';
+    }
+    saveState();
+  });
+  document.getElementById('sel-especifica').addEventListener('change', saveState);
+}
+
+function buildBeliefs(S) {
+  const wrap = document.getElementById('beliefs-container');
+  BELIEF_QUESTIONS.forEach(q => {
+    const row = document.createElement('div');
+    row.className = 'belief-q';
+    row.dataset.qid = q.id;
+
+    const p = document.createElement('p');
+    p.className = 'q-text';
+    p.textContent = S[q.key] || q.id;
+    row.appendChild(p);
+
+    const sr = document.createElement('div');
+    sr.className = 'scale-row';
+    SCALE.forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'scale-btn';
+      btn.dataset.value = s.v;
+      btn.textContent = S[s.key] || s.v;
+      btn.addEventListener('click', () => {
+        const already = btn.classList.contains('selected');
+        sr.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+        if (!already) btn.classList.add('selected'); // tap again to deselect (= skip)
+        saveState();
+      });
+      sr.appendChild(btn);
+    });
+    row.appendChild(sr);
+    wrap.appendChild(row);
+  });
+}
+
+function collectState() {
+  const grande = document.getElementById('sel-grande').value;
+  const especifica = document.getElementById('sel-especifica').value;
+  const beliefs = {};
+  document.querySelectorAll('.belief-q').forEach(row => {
+    const sel = row.querySelector('.scale-btn.selected');
+    beliefs[row.dataset.qid] = sel ? sel.dataset.value : null;
+  });
+  return { area_grande: grande || null, area_especifica: especifica || null, beliefs };
+}
+
+function flashSaved() {
+  const note = document.getElementById('save-note');
+  if (!note) return;
+  note.style.opacity = '1';
+  clearTimeout(note._t);
+  note._t = setTimeout(() => { note.style.opacity = '0'; }, 2000);
+}
+
+function saveState() {
+  const data = collectState();
+  localStorage.setItem('drake-context', JSON.stringify(data));
+  const session_id = sessionStorage.getItem('drake_session');
+  if (session_id) {
+    fetch('/api/context', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ session_id }, data))
+    }).catch(e => console.warn('context save API error:', e.message));
+  }
+  flashSaved();
+}
+
+function loadSaved() {
+  const raw = localStorage.getItem('drake-context');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    if (d.area_grande) {
+      document.getElementById('sel-grande').value = d.area_grande;
+      document.getElementById('sel-grande').dispatchEvent(new Event('change'));
+      if (d.area_especifica) document.getElementById('sel-especifica').value = d.area_especifica;
+    }
+    if (d.beliefs) {
+      Object.keys(d.beliefs).forEach(qid => {
+        const v = d.beliefs[qid];
+        if (!v) return;
+        const row = document.querySelector(`.belief-q[data-qid="${qid}"]`);
+        if (!row) return;
+        const btn = row.querySelector(`.scale-btn[data-value="${v}"]`);
+        if (btn) btn.classList.add('selected');
+      });
+    }
+  } catch (e) { console.error(e); }
+}
+
+(async function () {
+  const supported = ['pt', 'en', 'es'];
+  const ul = new URLSearchParams(location.search).get('lang');
+  const bl = (navigator.language || 'pt').slice(0, 2);
+  const lang = supported.includes(ul) ? ul : supported.includes(bl) ? bl : 'pt';
+  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
+
+  document.getElementById('back-link').href = `consent.html?lang=${lang}`;
+  document.getElementById('next-link').href = `survey.html?q=0&lang=${lang}`;
+
+  let S = {};
+  try {
+    S = await fetch(`/i18n/${lang}.json`).then(r => r.json());
+  } catch (e) { console.warn('i18n load failed, using defaults'); }
+  window._S = S;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (S[k] !== undefined) el.textContent = S[k];
+  });
+
+  buildAreaSelect();
+  buildBeliefs(S);
+  loadSaved();
+
+  document.getElementById('next-link').addEventListener('click', () => { saveState(); });
+
+  document.body.classList.add('ready');
+})();
+</script>
+</body>
+</html>

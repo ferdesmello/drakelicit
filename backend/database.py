@@ -15,6 +15,7 @@ Tables created automatically on first startup via create_tables().
 
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime, timezone
 from typing import Optional
@@ -31,6 +32,17 @@ def get_pool() -> asyncpg.Pool:
     return _pool
 
 
+async def _init_connection(conn: asyncpg.Connection) -> None:
+    """Register a codec so jsonb columns round-trip as Python dicts,
+    instead of raw JSON strings, on every connection in the pool."""
+    await conn.set_type_codec(
+        'jsonb',
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema='pg_catalog',
+    )
+
+
 async def init_pool() -> None:
     """Create the connection pool. Called once at application startup."""
     global _pool
@@ -40,9 +52,10 @@ async def init_pool() -> None:
     )
     _pool = await asyncpg.create_pool(
         url,
-        min_size=2,      # always-open connections
-        max_size=10,     # peak connections under load
+        min_size=2,
+        max_size=10,
         command_timeout=30,
+        init=_init_connection,   # ← new
     )
 
 
@@ -79,6 +92,14 @@ CREATE TABLE IF NOT EXISTS answers (
 
     -- one row per session+question (upsert key)
     UNIQUE (session_id, question_id)
+);
+
+CREATE TABLE IF NOT EXISTS context_answers (
+    session_id      TEXT        PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+    area_grande     TEXT,
+    area_especifica TEXT,
+    beliefs         JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    answered_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- index for the aggregate query (fetch all answers for completed sessions)
@@ -199,6 +220,48 @@ async def get_all_completed_answers() -> tuple[int, list[dict]]:
             """
         )
     return int(n_sessions), [dict(r) for r in rows]
+
+
+# ── context (background + prior beliefs) ───────────────────────────────────
+
+async def upsert_context(
+    session_id: str,
+    area_grande: Optional[str],
+    area_especifica: Optional[str],
+    beliefs: dict,
+) -> None:
+    """Insert or replace the background/beliefs page for one session."""
+    async with get_pool().acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO context_answers
+                (session_id, area_grande, area_especifica, beliefs, answered_at)
+            VALUES
+                ($1, $2, $3, $4, now())
+            ON CONFLICT (session_id) DO UPDATE SET
+                area_grande     = EXCLUDED.area_grande,
+                area_especifica = EXCLUDED.area_especifica,
+                beliefs         = EXCLUDED.beliefs,
+                answered_at     = now()
+            """,
+            session_id, area_grande, area_especifica, beliefs,
+        )
+
+
+async def get_all_completed_contexts() -> list[dict]:
+    """Background/belief answers for all completed sessions — used only to
+    characterize the sample. area_especifica is included here (raw), but
+    should never be surfaced in an aggregate endpoint — see main.py."""
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT c.session_id, c.area_grande, c.area_especifica, c.beliefs
+            FROM context_answers c
+            JOIN sessions s ON s.id = c.session_id
+            WHERE s.completed = true
+            """
+        )
+    return [dict(r) for r in rows]
 
 
 # ── health ────────────────────────────────────────────────────────────────

@@ -1367,10 +1367,10 @@
 				const lang     = params.get('lang') || 'pt';
 
 				if (dir < 0) {
-					if (nextQ < 0) return;
-					params.set('q', nextQ);
-					location.search = params.toString();
-					return;
+					if (nextQ < 0) {
+						location.href = `context.html?lang=${lang}`;   // was: return;
+						return;
+					}
 				}
 				if (!hasInteracted && !skipped && !answerPreviouslySaved) {
 					const warn = document.getElementById('interaction-warning');

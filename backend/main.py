@@ -20,7 +20,7 @@ import json
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
@@ -62,6 +62,12 @@ class AnswerPayload(BaseModel):
     t_hi: float
     skipped: bool = False
 
+class ContextPayload(BaseModel):
+    session_id: str
+    area_grande: Optional[str] = None
+    area_especifica: Optional[str] = None
+    beliefs: Dict[str, Optional[str]] = {}
+
 class SessionResponse(BaseModel):
     session_id: str
 
@@ -89,6 +95,20 @@ async def save_answer(payload: AnswerPayload):
         t_mode=payload.t_mode,
         t_hi=payload.t_hi,
         skipped=payload.skipped,
+    )
+    return {"ok": True}
+
+
+@app.post("/api/context", tags=["survey"])
+async def save_context(payload: ContextPayload):
+    """Save or update the optional background/beliefs page for one session."""
+    if not await db.session_exists(payload.session_id):
+        raise HTTPException(status_code=404, detail="Session not found")
+    await db.upsert_context(
+        session_id=payload.session_id,
+        area_grande=payload.area_grande,
+        area_especifica=payload.area_especifica,
+        beliefs=payload.beliefs,
     )
     return {"ok": True}
 
@@ -167,6 +187,38 @@ async def get_aggregate_computed():
     return result
 
 
+@app.get("/api/aggregate/context", tags=["results"])
+async def get_aggregate_context():
+    """
+    Aggregate counts for the background/beliefs page, from completed sessions
+    only. Deliberately excludes area_especifica — only area_grande is ever
+    exposed in an aggregate response, so the "present by big areas only"
+    rule is enforced server-side, not just left to how the results page
+    happens to render it.
+    """
+    contexts = await db.get_all_completed_contexts()
+    n = len(contexts)
+
+    area_counts: dict[str, int] = {}
+    belief_counts: dict[str, dict[str, int]] = {}
+
+    for c in contexts:
+        g = c.get("area_grande")
+        if g:
+            area_counts[g] = area_counts.get(g, 0) + 1
+        for qid, val in (c.get("beliefs") or {}).items():
+            if not val:
+                continue
+            belief_counts.setdefault(qid, {})
+            belief_counts[qid][val] = belief_counts[qid].get(val, 0) + 1
+
+    return {
+        "n_sessions": n,
+        "area_grande_counts": area_counts,
+        "belief_counts": belief_counts,
+    }
+
+
 @app.get("/api/health", tags=["meta"])
 async def health():
     """Liveness check — also shows pool and data stats."""
@@ -202,6 +254,27 @@ async def export_sessions_csv():
     return Response(content=buf.getvalue(),
                     media_type="text/csv",
                     headers={"Content-Disposition": "attachment; filename=sessions.csv"})
+
+
+@app.get("/api/export/context.csv", tags=["export"])
+async def export_context_csv():
+    """Download all background/beliefs answers (completed sessions) as CSV."""
+    import csv, io
+    contexts = await db.get_all_completed_contexts()
+    belief_ids = sorted({qid for c in contexts for qid in (c.get("beliefs") or {}).keys()})
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["session_id", "area_grande", "area_especifica", *belief_ids])
+    for c in contexts:
+        beliefs = c.get("beliefs") or {}
+        w.writerow([
+            c["session_id"], c.get("area_grande") or "", c.get("area_especifica") or "",
+            *[beliefs.get(qid) or "" for qid in belief_ids],
+        ])
+    return Response(
+        content=buf.getvalue(), media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=context.csv"},
+    )
 
 
 @app.get("/api/export/answers.csv", tags=["export"])
