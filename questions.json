@@ -28,8 +28,8 @@
 		"questionKey": "ne_question",
 		"axisKey": "ne_axis",
 		"axisMode": "log",
-		"tMin": -8,
-		"tMax": 2,
+		"tMin": -6,
+		"tMax": 1,
 		"initSpread": 1.0
 	},
 	{
@@ -39,7 +39,7 @@
 		"questionKey": "fl_question",
 		"axisKey": "fl_axis",
 		"axisMode": "log",
-		"tMin": -31,
+		"tMin": -24,
 		"tMax": 0,
 		"initSpread": 3.0
 	},
@@ -50,7 +50,7 @@
 		"questionKey": "fi_question",
 		"axisKey": "fi_axis",
 		"axisMode": "log",
-		"tMin": -20,
+		"tMin": -18,
 		"tMax": 0,
 		"initSpread": 3.0
 	},
@@ -61,7 +61,7 @@
 		"questionKey": "fc_question",
 		"axisKey": "fc_axis",
 		"axisMode": "log",
-		"tMin": -8,
+		"tMin": -9,
 		"tMax": 0,
 		"initSpread": 1.5
 	},

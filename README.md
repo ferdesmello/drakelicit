@@ -24,8 +24,9 @@ The user flow is:
 1. index.html lets the user choose a language.
 2. intro.html explains the Drake equation and the survey format.
 3. consent.html creates a survey session on the server.
-4. survey.html presents one parameter at a time and saves drafts.
-5. results.html shows the individual and aggregated results.
+4. context.html presents skippable warmup questions
+5. survey.html presents one parameter at a time and saves drafts.
+6. results.html shows the individual and aggregated results.
 
 The survey currently supports Portuguese, Spanish, and English through the files in i18n/.
 
@@ -36,6 +37,7 @@ n-elicit/
 ├── index.html
 ├── intro.html
 ├── consent.html
+├── context.html
 ├── survey.html
 ├── results.html
 ├── questions.json
