@@ -109,6 +109,8 @@
 	"results_redo": "Redo survey",
 	"results_footer": "Thank you for your participation. The data collected will contribute to research in astrobiology.",
 	"finish": "Finish",
+	"submit_error": "Could not send your answers. Check your connection and try again — nothing was lost.",
+	"submitting": "Sending…",
 	"back_to_intro": "Back to the beginning",
 	"results_your_curve": "Your distribution of N",
 	"results_comm_curve": "Community distribution",

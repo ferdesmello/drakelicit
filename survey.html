@@ -696,6 +696,9 @@
 			style="display:none;margin-top:.8rem;font-size:13px;color:#ba7517;">
 		</p>
 
+		<p id="submit-error" data-i18n="submit_error"
+			style="display:none;margin-top:.8rem;font-size:13px;color:#ba7517;"></p>
+
 		<div style="margin-bottom:.6rem">
 			<a id="back-to-intro" href="intro.html"
 			   style="font-size:12px;color:#888780;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
@@ -1206,23 +1209,8 @@
 			function saveDraft() {
 				const key  = `drake-answer-${Q.id}`;
 				const data = { tLo, tMode, tHi, skipped, axisMode: Q.axisMode,
-				               answered: hasInteracted || skipped };
+				               answered: hasInteracted || skipped || answerPreviouslySaved };
 				localStorage.setItem(key, JSON.stringify(data));
-				const session_id = sessionStorage.getItem('drake_session');
-				if (!session_id) { flashSaved(); return; }
-				fetch('/api/answer', {
-					method: 'POST',
-					headers: {'Content-Type': 'application/json'},
-					body: JSON.stringify({
-						session_id,
-						question_id: Q.id,
-						axis_mode:   Q.axisMode,
-						t_lo:   tLo,
-						t_mode: tMode,
-						t_hi:   tHi,
-						skipped,
-					})
-				}).catch(e => console.warn('saveDraft API error:', e.message));
 				flashSaved();
 			}
 
@@ -1359,6 +1347,86 @@
 				}
 			});
 
+			/* ── final submit ─────────────────────────────────────────────────────
+			 * Drafts live ONLY in this browser (localStorage). The server receives
+			 * the answers once, here, in a single request. The id is generated on
+			 * the client and kept until success, so a retry after a lost response
+			 * cannot create a duplicate entry.
+			 */
+			function newUUID() {
+				if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+				const b = crypto.getRandomValues(new Uint8Array(16));
+				b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+				const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+				return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
+			}
+
+			async function submitAll(lang) {
+				const S   = window._S || {};
+				const btn = document.getElementById('next-btn');
+				const lbl = document.getElementById('next-btn-label');
+				const err = document.getElementById('submit-error');
+				err.style.display = 'none';
+
+				/* consent is required before anything is sent */
+				let consent = {};
+				try { consent = JSON.parse(sessionStorage.getItem('drake_consent')) || {}; } catch (e) {}
+				if (!consent.tcle_version) { location.href = `consent.html?lang=${lang}`; return; }
+
+				/* collect the 7 drafts; if one is missing, go back to it */
+				const answers = [];
+				for (let i = 0; i < window._questions.length; i++) {
+					const q = window._questions[i];
+					let d = null;
+					try { d = JSON.parse(localStorage.getItem(`drake-answer-${q.id}`)); } catch (e) {}
+					if (!d || !(d.answered || d.skipped)) {
+						const p = new URLSearchParams(location.search);
+						p.set('q', i);
+						location.search = p.toString();
+						return;
+					}
+					answers.push({
+						question_id: q.id, axis_mode: q.axisMode,
+						t_lo: d.tLo, t_mode: d.tMode, t_hi: d.tHi, skipped: !!d.skipped
+					});
+				}
+
+				/* optional background/beliefs page (kept only in this browser until now) */
+				let context = null;
+				try { context = JSON.parse(localStorage.getItem('drake-context')); } catch (e) {}
+
+				let pending = sessionStorage.getItem('drake_pending_id');
+				if (!pending) { pending = newUUID(); sessionStorage.setItem('drake_pending_id', pending); }
+
+				btn.classList.add('inactive'); btn.style.pointerEvents = 'none';
+				if (lbl && S.submitting) lbl.textContent = S.submitting;
+				try {
+					const res = await fetch('/api/submit', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							session_id: pending,
+							lang: consent.lang || lang,
+							tcle_version: consent.tcle_version,
+							answers,
+							context
+						})
+					});
+					if (!res.ok) throw new Error('HTTP ' + res.status);
+					const { session_id } = await res.json();
+					sessionStorage.setItem('drake_session', session_id);
+					sessionStorage.removeItem('drake_pending_id');
+					window._questions.forEach(q => localStorage.removeItem(`drake-answer-${q.id}`));
+					localStorage.removeItem('drake-context');
+					location.href = `results.html?lang=${lang}&session=${session_id}`;
+				} catch (e) {
+					console.warn('submit failed:', e.message);
+					err.style.display = 'block';
+					btn.classList.remove('inactive'); btn.style.pointerEvents = '';
+					if (lbl && S.finish) lbl.textContent = S.finish;
+				}
+			}
+
 			/* ── navigation ── */
 			window.navigate = function (dir) {
 				const params   = new URLSearchParams(location.search);
@@ -1379,21 +1447,7 @@
 				}
 				saveDraft();
 				if (nextQ >= window._questions.length) {
-					const session_id = sessionStorage.getItem('drake_session');
-					const goToResults = () => {
-						const sep = session_id ? '&session=' + session_id : '';
-						location.href = 'results.html?lang=' + lang + sep;
-					};
-					if (session_id) {
-						fetch('/api/complete', {
-							method: 'POST',
-							headers: {'Content-Type': 'application/json'},
-							body: JSON.stringify({ session_id })
-						}).catch(e => console.warn('complete API error:', e.message))
-						  .finally(goToResults);
-					} else {
-						goToResults();
-					}
+					submitAll(lang);
 					return;
 				}
 				params.set('q', nextQ);

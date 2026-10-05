@@ -113,34 +113,70 @@ async def create_tables() -> None:
         await conn.execute(CREATE_TABLES_SQL)
 
 
-# ── sessions ──────────────────────────────────────────────────────────────
+# ── submit (the ONLY place that writes survey data) ─────────────────────
 
-async def create_session(session_id: str, lang: str, tcle_version: str) -> None:
-    """Insert a new session row."""
+async def submit_session(session_id: str, lang: str, tcle_version: str,
+                         answers: list[dict], context: Optional[dict] = None) -> bool:
+    """
+    Store a finished survey in ONE transaction: the session row (already
+    completed), all of its answers and, if present, the optional
+    background/beliefs page. Either everything is written or nothing is.
+
+    Idempotent: if session_id already exists (e.g. the browser retried after
+    a lost response) nothing is written and False is returned.
+    """
+    rows = [
+        (session_id, a["question_id"], a["axis_mode"],
+         a["t_lo"], a["t_mode"], a["t_hi"], a["skipped"])
+        for a in answers
+    ]
     async with get_pool().acquire() as conn:
-        await conn.execute(
-            """
-            INSERT INTO sessions (id, lang, tcle_version)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (id) DO NOTHING
-            """,
-            session_id, lang, tcle_version,
-        )
+        async with conn.transaction():
+            created = await conn.fetchval(
+                """
+                INSERT INTO sessions (id, lang, tcle_version, completed, completed_at)
+                VALUES ($1, $2, $3, true, now())
+                ON CONFLICT (id) DO NOTHING
+                RETURNING id
+                """,
+                session_id, lang, tcle_version,
+            )
+            if created is None:
+                return False
+            await conn.executemany(
+                """
+                INSERT INTO answers
+                    (session_id, question_id, axis_mode, t_lo, t_mode, t_hi, skipped)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                """,
+                rows,
+            )
+            if context:
+                await conn.execute(
+                    """
+                    INSERT INTO context_answers
+                        (session_id, area_grande, area_especifica, beliefs)
+                    VALUES ($1, $2, $3, $4)
+                    """,
+                    session_id, context.get("area_grande"),
+                    context.get("area_especifica"), context.get("beliefs") or {},
+                )
+    return True
 
 
-async def mark_session_complete(session_id: str) -> bool:
-    """Mark a session as completed. Returns True if the session existed."""
+async def purge_incomplete_sessions() -> int:
+    """
+    One-off cleanup of sessions left over from the previous design (which
+    saved answers while the user was still filling in the survey).
+    Answers and context are removed too (ON DELETE CASCADE).
+    Returns the number of sessions deleted.
+    """
     async with get_pool().acquire() as conn:
-        result = await conn.execute(
-            """
-            UPDATE sessions
-            SET completed = true, completed_at = now()
-            WHERE id = $1
-            """,
-            session_id,
-        )
-    return result == "UPDATE 1"
+        result = await conn.execute("DELETE FROM sessions WHERE completed = false")
+    return int(result.split()[-1])
 
+
+# ── reads ─────────────────────────────────────────────────────────────────
 
 async def session_exists(session_id: str) -> bool:
     async with get_pool().acquire() as conn:
@@ -148,41 +184,6 @@ async def session_exists(session_id: str) -> bool:
             "SELECT id FROM sessions WHERE id = $1", session_id
         )
     return row is not None
-
-
-# ── answers ───────────────────────────────────────────────────────────────
-
-async def upsert_answer(
-    session_id: str,
-    question_id: str,
-    axis_mode: str,
-    t_lo: float,
-    t_mode: float,
-    t_hi: float,
-    skipped: bool,
-) -> None:
-    """
-    Insert or replace an answer for a given session+question.
-    Uses PostgreSQL's atomic ON CONFLICT DO UPDATE — no race conditions.
-    """
-    async with get_pool().acquire() as conn:
-        await conn.execute(
-            """
-            INSERT INTO answers
-                (session_id, question_id, axis_mode, t_lo, t_mode, t_hi, skipped, answered_at)
-            VALUES
-                ($1, $2, $3, $4, $5, $6, $7, now())
-            ON CONFLICT (session_id, question_id) DO UPDATE SET
-                axis_mode   = EXCLUDED.axis_mode,
-                t_lo        = EXCLUDED.t_lo,
-                t_mode      = EXCLUDED.t_mode,
-                t_hi        = EXCLUDED.t_hi,
-                skipped     = EXCLUDED.skipped,
-                answered_at = now()
-            """,
-            session_id, question_id, axis_mode,
-            t_lo, t_mode, t_hi, skipped,
-        )
 
 
 async def get_answers_for_session(session_id: str) -> list[dict]:
@@ -193,7 +194,7 @@ async def get_answers_for_session(session_id: str) -> list[dict]:
             SELECT question_id, axis_mode, t_lo, t_mode, t_hi, skipped, answered_at
             FROM answers
             WHERE session_id = $1
-            ORDER BY answered_at
+            ORDER BY id
             """,
             session_id,
         )
@@ -216,36 +217,10 @@ async def get_all_completed_answers() -> tuple[int, list[dict]]:
             FROM answers a
             JOIN sessions s ON s.id = a.session_id
             WHERE s.completed = true
-            ORDER BY a.session_id, a.answered_at
+            ORDER BY a.session_id, a.id
             """
         )
     return int(n_sessions), [dict(r) for r in rows]
-
-
-# ── context (background + prior beliefs) ───────────────────────────────────
-
-async def upsert_context(
-    session_id: str,
-    area_grande: Optional[str],
-    area_especifica: Optional[str],
-    beliefs: dict,
-) -> None:
-    """Insert or replace the background/beliefs page for one session."""
-    async with get_pool().acquire() as conn:
-        await conn.execute(
-            """
-            INSERT INTO context_answers
-                (session_id, area_grande, area_especifica, beliefs, answered_at)
-            VALUES
-                ($1, $2, $3, $4, now())
-            ON CONFLICT (session_id) DO UPDATE SET
-                area_grande     = EXCLUDED.area_grande,
-                area_especifica = EXCLUDED.area_especifica,
-                beliefs         = EXCLUDED.beliefs,
-                answered_at     = now()
-            """,
-            session_id, area_grande, area_especifica, beliefs,
-        )
 
 
 async def get_all_completed_contexts() -> list[dict]:

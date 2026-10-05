@@ -109,6 +109,8 @@
 	"results_redo": "Repetir encuesta",
 	"results_footer": "Gracias por su participación. Los datos recopilados contribuirán a la investigación en astrobiología.",
 	"finish": "Finalizar",
+	"submit_error": "No se pudieron enviar sus respuestas. Verifique la conexión e inténtelo de nuevo: no se perdió nada.",
+	"submitting": "Enviando…",
 	"back_to_intro": "Volver al principio",
 	"results_your_curve": "Tu distribución de N",
 	"results_comm_curve": "Distribución de la comunidad",

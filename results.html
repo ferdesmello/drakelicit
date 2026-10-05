@@ -601,14 +601,15 @@
 
 			const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
 			/* extra bottom padding to fit axis label */
-			const PAD = { top: 10 * dpr, right: 14 * dpr, bottom: 42 * dpr, left: 14 * dpr };
+			const PAD = { top: 10 * dpr, right: 14 * dpr, bottom: 48 * dpr, left: 14 * dpr };
 			const pw = W - PAD.left - PAD.right, ph = H - PAD.top - PAD.bottom;
 
 			const REF_MW = 0;
 			const REF_UNIV = Math.log10(5e-13);  /* ≈ -12.301 */
 
 			/* x-axis range: data + both ref lines */
-			const grids = [yourDist.log_N_grid];
+			const grids = [];
+			if (yourDist) grids.push(yourDist.log_N_grid);
 			if (commDist) grids.push(commDist.log_N_grid);
 			const allT = grids.flat();
 			const tMin = Math.min(Math.min(...allT), REF_UNIV - 1);
@@ -623,7 +624,8 @@
 				dist.log_N_grid.forEach((t, i) => { if (t >= tMin && t <= tMax && dist.pdf[i] > m) m = dist.pdf[i]; });
 				return m;
 			}
-			let ymax = maxInRange(yourDist);
+			let ymax = 0;
+			if (yourDist) ymax = maxInRange(yourDist);
 			if (commDist) ymax = Math.max(ymax, maxInRange(commDist));
 			if (ymax === 0) ymax = 1;
 			ymax *= 1.18;
@@ -645,9 +647,11 @@
 					dark ? 'rgba(200,80,40,.22)' : 'rgba(180,60,20,.18)',
 					dark ? 'rgba(210,90,50,.88)' : 'rgba(170,55,20,.82)');
 			}
-			drawCurve(yourDist,
-				dark ? 'rgba(30,170,110,.28)' : 'rgba(20,150,90,.22)',
-				dark ? 'rgba(30,190,120,.92)' : 'rgba(15,140,80,.88)');
+			if (yourDist) {
+				drawCurve(yourDist,
+					dark ? 'rgba(30,170,110,.28)' : 'rgba(20,150,90,.22)',
+					dark ? 'rgba(30,190,120,.92)' : 'rgba(15,140,80,.88)');
+}
 
 			/* ── reference lines ── */
 			function drawRefLine(t, color, label) {
@@ -657,7 +661,7 @@
 				ctx.beginPath(); ctx.moveTo(px, PAD.top); ctx.lineTo(px, PAD.top + ph);
 				ctx.strokeStyle = color; ctx.lineWidth = 1.5 * dpr;
 				ctx.setLineDash([4 * dpr, 3 * dpr]); ctx.stroke(); ctx.setLineDash([]);
-				const fPx = Math.max(9, Math.round(9 * dpr));
+				const fPx = Math.max(14, Math.round(14 * dpr));
 				ctx.font = `500 ${fPx}px system-ui,-apple-system,sans-serif`;
 				ctx.fillStyle = color; ctx.textBaseline = 'bottom'; ctx.textAlign = 'left';
 				ctx.fillText(label, px + 3 * dpr, PAD.top + ph - 2 * dpr);
@@ -677,7 +681,7 @@
 			ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
 
 			/* ── tick labels ── */
-			const fPx = Math.max(10, Math.round(10.5 * dpr));
+			const fPx = Math.max(14, Math.round(14 * dpr));
 			const cTxt = dark ? 'rgba(255,255,255,.38)' : 'rgba(0,0,0,.38)';
 			ctx.fillStyle = cTxt;
 			ctx.font = `${fPx}px system-ui,-apple-system,sans-serif`;
@@ -697,7 +701,7 @@
 			}
 
 			/* ── x-axis label "N" centred below ticks ── */
-			const labelFPx = Math.max(11, Math.round(11 * dpr));
+			const labelFPx = Math.max(14, Math.round(14 * dpr));
 			ctx.font = `italic ${labelFPx}px system-ui,-apple-system,sans-serif`;
 			ctx.fillStyle = cTxt; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
 			ctx.fillText('N  (escala log₁₀)', PAD.left + pw / 2, H - 2 * dpr);
@@ -713,7 +717,7 @@
 
 			document.getElementById('redo-btn').onclick = function (e) {
 				e.preventDefault();
-				Object.keys(localStorage).filter(k => k.startsWith('drake-answer-')).forEach(k => localStorage.removeItem(k));
+				Object.keys(localStorage).filter(k => k.startsWith('drake-')).forEach(k => localStorage.removeItem(k));
 				sessionStorage.removeItem('drake_session');
 				location.href = `consent.html?lang=${lang}`;
 			};
@@ -772,9 +776,11 @@
 			}
 
 			/* ── chart ── */
-			if (yourDist && !yourDist.error) {
-				drawChart(yourDist, commDist);
-				window.addEventListener('resize', () => drawChart(yourDist, commDist));
+			if ((yourDist && !yourDist.error) || commDist) {
+				drawChart(yourDist && !yourDist.error ? yourDist : null, commDist);
+				window.addEventListener('resize', () =>
+					drawChart(yourDist && !yourDist.error ? yourDist : null, commDist)
+				);
 			}
 
 			/* ── param table ── */
@@ -798,10 +804,19 @@
 				} else {
 					const isLog = Q.axisMode !== 'lin';
 					const modeVal = isLog ? Math.pow(10, d.tMode) : d.tMode;
-					const q25T = d.tMode - 0.6745 * Math.max(SIG_MIN, (d.tMode - d.tLo) / Z90);
-					const q75T = d.tMode + 0.6745 * Math.max(SIG_MIN, (d.tHi - d.tMode) / Z90);
+
+					// 1. Calculate raw percentile positions
+					let rawQ25T = d.tMode - 0.6745 * Math.max(SIG_MIN, (d.tMode - d.tLo) / Z90);
+					let rawQ75T = d.tMode + 0.6745 * Math.max(SIG_MIN, (d.tHi - d.tMode) / Z90);
+
+					// 2. Clamp the percentile positions to the question's explicit limits [Q.tMin, Q.tMax]
+					const q25T = Math.max(Q.tMin, Math.min(Q.tMax, rawQ25T));
+					const q75T = Math.max(Q.tMin, Math.min(Q.tMax, rawQ75T));
+
+					// 3. Convert back to linear/log scale for the table display
 					const q25Val = isLog ? Math.pow(10, q25T) : q25T;
 					const q75Val = isLog ? Math.pow(10, q75T) : q75T;
+
 					row.innerHTML = `<td class="param-sym">${Q.symbolHTML}</td>` +
 						`<td>${paramName}</td>` +
 						`<td>${fmtV(modeVal)} · [${fmtV(q25Val)}, ${fmtV(q75Val)}]</td>`;

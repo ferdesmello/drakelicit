@@ -123,28 +123,15 @@ function updateBtn(){
   document.getElementById('start-btn').classList.toggle('inactive', !all);
 }
 
-async function startSurvey(){
+const TCLE_VERSION = '0.8';   /* keep in sync with consent_date in the i18n files */
+
+function startSurvey(){
   const all = ['chk1','chk2','chk3'].every(id=>document.getElementById(id).checked);
   if(!all) return;
-  const btn = document.getElementById('start-btn');
-  btn.style.opacity = '0.5';
-  btn.style.pointerEvents = 'none';
-  try {
-    const res = await fetch('/api/consent', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ lang, tcle_version: '1.0' })
-    });
-    if(!res.ok) throw new Error('Server error ' + res.status);
-    const { session_id } = await res.json();
-    sessionStorage.setItem('drake_session', session_id);
-    sessionStorage.setItem('drake_lang', lang);
-  } catch(e) {
-    /* If the API is unreachable (e.g. running without the server),
-       continue anyway — answers will fall back to localStorage only. */
-    console.warn('Consent API unavailable, continuing offline:', e.message);
-    sessionStorage.removeItem('drake_session');
-  }
+  /* No server call here: nothing is stored on the server until the user finishes. */
+  sessionStorage.setItem('drake_consent', JSON.stringify({ lang, tcle_version: TCLE_VERSION }));
+  sessionStorage.removeItem('drake_session');
+  sessionStorage.removeItem('drake_pending_id');
   location.href = `context.html?lang=${lang}`;
 }
 </script>

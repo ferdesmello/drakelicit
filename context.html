@@ -241,15 +241,8 @@ function flashSaved() {
 
 function saveState() {
   const data = collectState();
+  /* kept only in this browser; sent together with the answers when the survey is finished */
   localStorage.setItem('drake-context', JSON.stringify(data));
-  const session_id = sessionStorage.getItem('drake_session');
-  if (session_id) {
-    fetch('/api/context', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ session_id }, data))
-    }).catch(e => console.warn('context save API error:', e.message));
-  }
   flashSaved();
 }
 

@@ -1,39 +1,61 @@
 """
-Drake Survey — FastAPI backend
-==============================
-Step 2: PostgreSQL via asyncpg (replaces data.json file storage).
+Drake Survey — FastAPI backend (v0.3)
+=====================================
+Privacy design: while the user fills in the survey, drafts live ONLY in the
+browser (localStorage). The server receives the answers once, at the end,
+through POST /api/submit, and stores them in a single transaction. People who
+quit before finishing leave nothing on the server.
 
 Run:
     export DATABASE_URL="postgresql://drake_user:password@localhost/drake_survey"
-    uvicorn main:app --reload --port 8000
+    export ADMIN_TOKEN="a-long-random-string"
+    uvicorn main:app --port 8000 --no-access-log
 
-The DATABASE_URL defaults to localhost with the dev credentials if not set.
-Tables are created automatically on startup.
+    (--no-access-log: uvicorn would otherwise print each visitor's IP address.)
 
-To import existing data from the old data.json:
-    python migrate.py
+Environment variables:
+    DATABASE_URL  PostgreSQL connection string
+    ADMIN_TOKEN   secret for the raw-data / stats endpoints (they are disabled
+                  if it is not set)
+    STATIC_DIR    folder served as the website (default: parent of this folder).
+                  Best practice: point it at a dedicated folder that contains
+                  ONLY html, json, i18n/ and data/ — no Python files.
+
+Admin usage (header, not URL, so the token does not end up in logs):
+    curl -H "X-Admin-Token: $ADMIN_TOKEN" http://localhost:8000/api/export/answers.csv -o answers.csv
 """
 
 from __future__ import annotations
 
+import csv
+import io
 import json
+import math
+import os
+import secrets
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Dict, Optional
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import database as db
 from compute import compute_all_from_answers, compute_individual_N
 
-# ── paths ──────────────────────────────────────────────────────────────────
-HERE          = Path(__file__).parent
-STATIC_DIR    = HERE.parent
+# ── paths / config ─────────────────────────────────────────────────────────
+HERE           = Path(__file__).resolve().parent
+STATIC_DIR     = Path(os.environ.get("STATIC_DIR", HERE.parent)).resolve()
 QUESTIONS_FILE = STATIC_DIR / "questions.json"
+ADMIN_TOKEN    = os.environ.get("ADMIN_TOKEN", "")
+SUPPORTED_LANGS = {"pt", "en", "es"}
+
+
+def load_questions() -> list[dict]:
+    return json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))
 
 
 # ── lifespan: open/close the connection pool ───────────────────────────────
@@ -44,17 +66,39 @@ async def lifespan(app: FastAPI):
     yield
     await db.close_pool()
 
-app = FastAPI(title="Drake Survey API", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Drake Survey API", version="0.3.0", lifespan=lifespan)
+
+
+# ── protect the static mount from serving source code ─────────────────────
+BLOCKED_SUFFIXES = {".py", ".pyc", ".env", ".sql", ".toml", ".ini", ".cfg",
+                    ".yml", ".yaml", ".sh", ".log"}
+
+@app.middleware("http")
+async def block_sensitive_static(request: Request, call_next):
+    path = request.url.path
+    if not path.startswith("/api/"):
+        parts = [p.lower() for p in path.split("/") if p]
+        hidden   = any(p.startswith(".") or p == "__pycache__" for p in parts)
+        in_code  = HERE != STATIC_DIR and HERE.name.lower() in parts
+        bad_ext  = Path(path).suffix.lower() in BLOCKED_SUFFIXES
+        if hidden or in_code or bad_ext:
+            return Response(status_code=404)
+    return await call_next(request)
+
+
+# ── admin authentication ───────────────────────────────────────────────────
+def require_admin(x_admin_token: str = Header(default="")):
+    if not ADMIN_TOKEN:
+        return   # TEMPORARY: open for local testing. REMOVE before going online!
+        #raise HTTPException(status_code=503,
+        #                    detail="Admin endpoints are disabled (ADMIN_TOKEN not set).")
+    if not secrets.compare_digest(x_admin_token.encode(), ADMIN_TOKEN.encode()):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 # ── Pydantic models ────────────────────────────────────────────────────────
 
-class ConsentPayload(BaseModel):
-    lang: str = "pt"
-    tcle_version: str = "1.0"
-
-class AnswerPayload(BaseModel):
-    session_id: str
+class AnswerItem(BaseModel):
     question_id: str
     axis_mode: str = "log"
     t_lo: float
@@ -62,77 +106,99 @@ class AnswerPayload(BaseModel):
     t_hi: float
     skipped: bool = False
 
-class ContextPayload(BaseModel):
-    session_id: str
+class ContextItem(BaseModel):
+    """Optional background/beliefs page (context.html)."""
     area_grande: Optional[str] = None
     area_especifica: Optional[str] = None
     beliefs: Dict[str, Optional[str]] = {}
+
+class SubmitPayload(BaseModel):
+    session_id: str            # generated by the browser; makes retries idempotent
+    lang: str = "pt"
+    tcle_version: str = "1.0"
+    answers: list[AnswerItem]
+    context: Optional[ContextItem] = None
 
 class SessionResponse(BaseModel):
     session_id: str
 
 
+def validate_answers(items: list[AnswerItem], questions: list[dict]) -> None:
+    """Reject anything that could not have come from the real survey page."""
+    qmap = {q["id"]: q for q in questions}
+    ids = [a.question_id for a in items]
+    if len(ids) != len(set(ids)) or set(ids) != set(qmap):
+        raise HTTPException(422, "Answers must contain each question exactly once.")
+    eps = 1e-6
+    for a in items:
+        q = qmap[a.question_id]
+        if not all(math.isfinite(v) for v in (a.t_lo, a.t_mode, a.t_hi)):
+            raise HTTPException(422, f"Non-finite value in '{a.question_id}'.")
+        if a.axis_mode != q.get("axisMode", "log"):
+            raise HTTPException(422, f"Wrong axis_mode for '{a.question_id}'.")
+        if not a.skipped:
+            ok = (q["tMin"] - eps <= a.t_lo <= a.t_mode <= a.t_hi <= q["tMax"] + eps)
+            if not ok:
+                raise HTTPException(422, f"Out-of-range values in '{a.question_id}'.")
+
+
+BELIEF_VALUES = {"very_unlikely", "unlikely", "unsure", "likely", "very_likely"}
+
+def clean_context(ctx: Optional[ContextItem]) -> Optional[dict]:
+    """Validate the optional context page; return None if it is empty."""
+    if ctx is None:
+        return None
+    for v in (ctx.area_grande, ctx.area_especifica):
+        if v is not None and len(v) > 120:
+            raise HTTPException(422, "Context field too long.")
+    if len(ctx.beliefs) > 20:
+        raise HTTPException(422, "Too many belief entries.")
+    beliefs = {}
+    for k, v in ctx.beliefs.items():
+        if len(k) > 40:
+            raise HTTPException(422, "Belief key too long.")
+        if v is None:
+            continue
+        if v not in BELIEF_VALUES:
+            raise HTTPException(422, f"Invalid belief value for '{k}'.")
+        beliefs[k] = v
+    out = {"area_grande": ctx.area_grande or None,
+           "area_especifica": ctx.area_especifica or None,
+           "beliefs": beliefs}
+    return out if (out["area_grande"] or out["area_especifica"] or beliefs) else None
+
+
 # ── Survey API ─────────────────────────────────────────────────────────────
 
-@app.post("/api/consent", response_model=SessionResponse, tags=["survey"])
-async def create_session(payload: ConsentPayload):
-    """Create a new survey session and return its UUID."""
-    session_id = str(uuid.uuid4())
-    await db.create_session(session_id, payload.lang, payload.tcle_version)
-    return SessionResponse(session_id=session_id)
+@app.post("/api/submit", response_model=SessionResponse, tags=["survey"])
+async def submit(payload: SubmitPayload):
+    """
+    Receive a finished survey and store it atomically.
+    Safe to call twice with the same session_id (the second call is a no-op).
+    """
+    try:
+        sid = str(uuid.UUID(payload.session_id))
+    except ValueError:
+        raise HTTPException(422, "session_id must be a UUID.")
+    if payload.lang not in SUPPORTED_LANGS:
+        raise HTTPException(422, "Unsupported lang.")
+    if len(payload.tcle_version) > 20:
+        raise HTTPException(422, "tcle_version too long.")
 
+    validate_answers(payload.answers, load_questions())
 
-@app.post("/api/answer", tags=["survey"])
-async def save_answer(payload: AnswerPayload):
-    """Save or update one answer. Atomic upsert — safe under concurrent load."""
-    if not await db.session_exists(payload.session_id):
-        raise HTTPException(status_code=404, detail="Session not found")
-    await db.upsert_answer(
-        session_id=payload.session_id,
-        question_id=payload.question_id,
-        axis_mode=payload.axis_mode,
-        t_lo=payload.t_lo,
-        t_mode=payload.t_mode,
-        t_hi=payload.t_hi,
-        skipped=payload.skipped,
-    )
-    return {"ok": True}
-
-
-@app.post("/api/context", tags=["survey"])
-async def save_context(payload: ContextPayload):
-    """Save or update the optional background/beliefs page for one session."""
-    if not await db.session_exists(payload.session_id):
-        raise HTTPException(status_code=404, detail="Session not found")
-    await db.upsert_context(
-        session_id=payload.session_id,
-        area_grande=payload.area_grande,
-        area_especifica=payload.area_especifica,
-        beliefs=payload.beliefs,
-    )
-    return {"ok": True}
-
-
-@app.post("/api/complete", tags=["survey"])
-async def mark_complete(request: Request):
-    """Mark a session as fully completed."""
-    body = await request.json()
-    session_id = body.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
-    ok = await db.mark_session_complete(session_id)
-    if not ok:
-        raise HTTPException(status_code=404, detail="Session not found")
-    return {"ok": True}
+    rows = [a.model_dump() for a in payload.answers]
+    context = clean_context(payload.context)
+    await db.submit_session(sid, payload.lang, payload.tcle_version, rows, context)
+    return SessionResponse(session_id=sid)
 
 
 @app.get("/api/results/{session_id}", tags=["results"])
 async def get_results(session_id: str):
-    """Return raw answers for one session (used by results page as fallback)."""
+    """Raw answers of ONE session. The random UUID is the only 'key'."""
     if not await db.session_exists(session_id):
         raise HTTPException(status_code=404, detail="Session not found")
     answers = await db.get_answers_for_session(session_id)
-    # serialise datetime objects
     for a in answers:
         if hasattr(a.get("answered_at"), "isoformat"):
             a["answered_at"] = a["answered_at"].isoformat()
@@ -145,8 +211,7 @@ async def get_individual_computed(session_id: str):
     if not await db.session_exists(session_id):
         raise HTTPException(status_code=404, detail="Session not found")
     answers = await db.get_answers_for_session(session_id)
-    questions = json.loads(QUESTIONS_FILE.read_text())
-    # serialise datetimes before returning
+    questions = load_questions()
     clean_answers = []
     for a in answers:
         ca = dict(a)
@@ -161,26 +226,15 @@ async def get_individual_computed(session_id: str):
             "answers": clean_answers}
 
 
-@app.get("/api/aggregate", tags=["results"])
-async def get_aggregate():
-    """Return raw answers from all completed sessions."""
-    n_sessions, answers = await db.get_all_completed_answers()
-    for a in answers:
-        if hasattr(a.get("answered_at"), "isoformat"):
-            a["answered_at"] = a["answered_at"].isoformat()
-    return {"n_sessions": n_sessions, "answers": answers}
-
-
 @app.get("/api/aggregate/computed", tags=["results"])
 async def get_aggregate_computed():
-    """Compute community PDFs and N distribution from all completed sessions."""
+    """Community PDFs and N distribution (aggregated only — safe to be public)."""
     n_sessions, answers = await db.get_all_completed_answers()
     if n_sessions == 0:
         return {"n_sessions": 0, "n_answers": 0,
                 "parameters": {}, "community_N": {"error": "No data yet."}}
-    questions = json.loads(QUESTIONS_FILE.read_text())
     try:
-        result = compute_all_from_answers(answers, questions)
+        result = compute_all_from_answers(answers, load_questions())
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     result["n_sessions"] = n_sessions
@@ -219,25 +273,31 @@ async def get_aggregate_context():
     }
 
 
+# ── Public liveness check (no data) ───────────────────────────────────────
+
 @app.get("/api/health", tags=["meta"])
 async def health():
-    """Liveness check — also shows pool and data stats."""
-    stats = await db.health_stats()
+    return {"status": "ok"}
+
+
+# ── Admin-only endpoints (raw data) ───────────────────────────────────────
+
+@app.get("/api/stats", tags=["admin"], dependencies=[Depends(require_admin)])
+async def stats():
     pool = db.get_pool()
-    return {
-        "status": "ok",
-        **stats,
-        "pool_size": pool.get_size(),
-        "pool_free": pool.get_idle_size(),
-    }
+    return {**(await db.health_stats()),
+            "pool_size": pool.get_size(), "pool_free": pool.get_idle_size()}
 
 
-# ── Data export endpoints ─────────────────────────────────────────────────
+@app.get("/api/aggregate", tags=["admin"], dependencies=[Depends(require_admin)])
+async def get_aggregate():
+    """Raw answers from all completed sessions."""
+    n_sessions, answers = await db.get_all_completed_answers()
+    return {"n_sessions": n_sessions, "answers": answers}
 
-@app.get("/api/export/sessions.csv", tags=["export"])
+
+@app.get("/api/export/sessions.csv", tags=["admin"], dependencies=[Depends(require_admin)])
 async def export_sessions_csv():
-    """Download all sessions as a CSV file."""
-    import csv, io
     async with db.get_pool().acquire() as conn:
         rows = await conn.fetch(
             "SELECT id, lang, tcle_version, created_at, completed, completed_at "
@@ -245,21 +305,19 @@ async def export_sessions_csv():
         )
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["id","lang","tcle_version","created_at","completed","completed_at"])
+    w.writerow(["id", "lang", "tcle_version", "created_at", "completed", "completed_at"])
     for r in rows:
         w.writerow([r["id"], r["lang"], r["tcle_version"],
                     r["created_at"].isoformat() if r["created_at"] else "",
                     r["completed"],
                     r["completed_at"].isoformat() if r["completed_at"] else ""])
-    return Response(content=buf.getvalue(),
-                    media_type="text/csv",
+    return Response(content=buf.getvalue().encode("utf-8-sig"), media_type="text/csv",
                     headers={"Content-Disposition": "attachment; filename=sessions.csv"})
 
 
-@app.get("/api/export/context.csv", tags=["export"])
+@app.get("/api/export/context.csv", tags=["admin"], dependencies=[Depends(require_admin)])
 async def export_context_csv():
     """Download all background/beliefs answers (completed sessions) as CSV."""
-    import csv, io
     contexts = await db.get_all_completed_contexts()
     belief_ids = sorted({qid for c in contexts for qid in (c.get("beliefs") or {}).keys()})
     buf = io.StringIO()
@@ -272,30 +330,27 @@ async def export_context_csv():
             *[beliefs.get(qid) or "" for qid in belief_ids],
         ])
     return Response(
-        content=buf.getvalue(), media_type="text/csv",
+        content=buf.getvalue().encode("utf-8-sig"), media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=context.csv"},
     )
 
 
-@app.get("/api/export/answers.csv", tags=["export"])
+@app.get("/api/export/answers.csv", tags=["admin"], dependencies=[Depends(require_admin)])
 async def export_answers_csv():
-    """Download all answers as a CSV file."""
-    import csv, io
     async with db.get_pool().acquire() as conn:
         rows = await conn.fetch(
             "SELECT session_id, question_id, axis_mode, t_lo, t_mode, t_hi, "
-            "skipped, answered_at FROM answers ORDER BY session_id, answered_at"
+            "skipped, answered_at FROM answers ORDER BY session_id, id"
         )
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["session_id","question_id","axis_mode",
-                "t_lo","t_mode","t_hi","skipped","answered_at"])
+    w.writerow(["session_id", "question_id", "axis_mode",
+                "t_lo", "t_mode", "t_hi", "skipped", "answered_at"])
     for r in rows:
         w.writerow([r["session_id"], r["question_id"], r["axis_mode"],
                     r["t_lo"], r["t_mode"], r["t_hi"], r["skipped"],
                     r["answered_at"].isoformat() if r["answered_at"] else ""])
-    return Response(content=buf.getvalue(),
-                    media_type="text/csv",
+    return Response(content=buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition": "attachment; filename=answers.csv"})
 
 
