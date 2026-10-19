@@ -1,4 +1,6 @@
 server.txt
-demonstration big.gif
-slider_demo_old.gif
+token.txt
 *.mp4
+.env
+backend/__pycache__/
+__pycache__/

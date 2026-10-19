@@ -71,7 +71,7 @@ app = FastAPI(title="Drake Survey API", version="0.3.0", lifespan=lifespan)
 
 # ── protect the static mount from serving source code ─────────────────────
 BLOCKED_SUFFIXES = {".py", ".pyc", ".env", ".sql", ".toml", ".ini", ".cfg",
-                    ".yml", ".yaml", ".sh", ".log"}
+                       ".yml", ".yaml", ".sh", ".log", ".txt", ".csv", ".md"}
 
 @app.middleware("http")
 async def block_sensitive_static(request: Request, call_next):
@@ -89,9 +89,8 @@ async def block_sensitive_static(request: Request, call_next):
 # ── admin authentication ───────────────────────────────────────────────────
 def require_admin(x_admin_token: str = Header(default="")):
     if not ADMIN_TOKEN:
-        return   # TEMPORARY: open for local testing. REMOVE before going online!
-        #raise HTTPException(status_code=503,
-        #                    detail="Admin endpoints are disabled (ADMIN_TOKEN not set).")
+        raise HTTPException(status_code=503,
+                            detail="Admin endpoints are disabled (ADMIN_TOKEN not set).")
     if not secrets.compare_digest(x_admin_token.encode(), ADMIN_TOKEN.encode()):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
