@@ -1,6 +1,7 @@
-server.txt
-token.txt
-*.mp4
-.env
 backend/__pycache__/
 __pycache__/
+server.txt
+token.txt
+.env
+*.mp4
+*.csv

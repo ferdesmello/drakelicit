@@ -1,6 +1,6 @@
 # Drakelicit
 
-Drakelicit is a small web application for expert elicitation around the [Drake equation](https://en.wikipedia.org/wiki/Drake_equation). Instead of asking for one-point estimates, it asks each respondent to express uncertainty as a distribution for every parameter and then combines those answers into a distribution for the possible number of detectable civilizations in the Milky Way.
+Drakelicit is a small web application for expert elicitation around the [Drake equation](https://en.wikipedia.org/wiki/Drake_equation). Instead of asking for one-point estimates, it asks each respondent to express uncertainty as a distribution for every parameter and then combines those answers into a distribution for the possible number of detectable civilizations in the Milky Way galaxy.
 
 The interface is intentionally simple: a static HTML front end guides the user through the survey, and a FastAPI backend stores completed sessions, answers, and aggregate results.
 
@@ -44,9 +44,7 @@ drakelicit/
 ├── results.html
 ├── questions.json
 ├── data/
-│   ├── slider_demo.gif
-│   ├── demonstration.mp4
-│   └── demonstration big.gif
+│   └── slider_demo.gif
 ├── i18n/
 │   ├── en.json
 │   ├── es.json
@@ -57,7 +55,6 @@ drakelicit/
 │   ├── compute.py
 │   ├── requirements.txt
 │   └── README.md
-├── requirements.txt
 └── README.md
 ```
 
@@ -67,7 +64,7 @@ The backend serves the static front end as well, so you only need to start the F
 
 ```bash
 cd backend
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
@@ -79,16 +76,42 @@ The backend uses PostgreSQL via asyncpg. If `DATABASE_URL` is not set, it falls 
 
 Set your own connection string if you want to use a different database:
 
-```bash
+```powershell
 $env:DATABASE_URL = "postgresql://user:password@localhost/drake_survey"
 uvicorn main:app --reload --port 8000
 ```
 
-For deployments, set `ADMIN_TOKEN` as well. It protects the raw-data, statistics, and CSV export endpoints:
+For local development or deployments, set `ADMIN_TOKEN`. Raw-data, statistics, and CSV export endpoints are disabled when it is not set:
 
 ```powershell
 $env:ADMIN_TOKEN = "use-a-long-random-value"
 ```
+
+You can also place `DATABASE_URL` and `ADMIN_TOKEN` in a `.env` file in the
+`backend/` directory:
+
+```dotenv
+DATABASE_URL=postgresql://drake_user:your_password@localhost/drake_survey
+ADMIN_TOKEN=use-a-long-random-value
+```
+
+Start the app with the environment file:
+
+```powershell
+uvicorn main:app --reload --port 8000 --env-file .env
+```
+
+Do not commit `.env`, tokens, or exported CSV files. They are excluded by
+`.gitignore`. Generate a strong admin token with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+For a production deployment, set `STATIC_DIR` to a directory containing only
+the public website assets (`html`, `json`, `i18n/`, and `data/`). The backend
+blocks requests for source files and other sensitive file types from the
+static mount.
 
 ## Backend API
 
@@ -118,6 +141,7 @@ Send the admin token in the `X-Admin-Token` header when accessing protected endp
 - [questions.json](questions.json) contains the survey questions and parameter bounds.
 - [context.html](context.html) contains the optional background and beliefs page.
 - [i18n/en.json](i18n/en.json), [i18n/es.json](i18n/es.json), and [i18n/pt.json](i18n/pt.json) hold the translation strings used by the front end.
+- [backend/requirements.txt](backend/requirements.txt) lists the backend dependencies, including `python-dotenv` for `.env` configuration.
 
 ## Drake equation context
 
@@ -150,6 +174,6 @@ https://github.com/ferdesmello/drake-metaculus
 
 ## Notes
 
-- The data/slider_demo.gif image is used in the intro page as a quick visual explanation of the slider controls; the data/ directory also contains demonstration video/GIF assets.
+- The data/slider_demo.gif image is used in the intro page as a quick visual explanation of the slider controls.
 - The front end is static HTML and JavaScript. Drafts are stored locally in the browser, while the backend is used for the final submission, persistence, and results.
 - The backend README contains additional PostgreSQL setup and deployment notes.

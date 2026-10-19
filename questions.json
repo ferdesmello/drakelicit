@@ -6,7 +6,7 @@
 		"questionKey": "Ns_question",
 		"axisKey": "Ns_axis",
 		"axisMode": "log",
-		"tMin": 9,
+		"tMin": 10,
 		"tMax": 12,
 		"initSpread": 0.5
 	},
@@ -39,7 +39,7 @@
 		"questionKey": "fl_question",
 		"axisKey": "fl_axis",
 		"axisMode": "log",
-		"tMin": -24,
+		"tMin": -12,
 		"tMax": 0,
 		"initSpread": 3.0
 	},
@@ -50,7 +50,7 @@
 		"questionKey": "fi_question",
 		"axisKey": "fi_axis",
 		"axisMode": "log",
-		"tMin": -18,
+		"tMin": -12,
 		"tMax": 0,
 		"initSpread": 3.0
 	},
