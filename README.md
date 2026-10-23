@@ -11,12 +11,13 @@ The survey walks a respondent through the Drake equation parameters one by one, 
 After the survey is complete, the backend can:
 
 1. Save the respondent’s session, answers, and optional context in one transaction.
-2. Return a per-user result for the computed N distribution.
+2. Return a per-user result for the computed $N$ distribution.
 3. Aggregate completed sessions into a community result.
 4. Provide aggregate context and belief counts without exposing specific-area responses.
 5. Export sessions, context, and answers as CSV files through admin-only endpoints.
+6. Generate a shareable image of a respondent's results, including the personal and available community distributions.
 
-The numerical work is handled in the backend, where the answer distributions are sampled and combined into a Monte Carlo estimate of N.
+The numerical work is handled in the backend, where the answer distributions are sampled and combined into a Monte Carlo estimate of $N$. The results page reports the median, IQR, 90% interval, and probabilities relative to ($N=1$) and ($N=5 \times 10^{-13}$). If a respondent skips a parameter, their personal N distribution is not calculated, but the community distribution can still be shown when enough completed sessions exist.
 
 ## How the survey works
 
@@ -26,11 +27,16 @@ The user flow is:
 2. intro.html explains the Drake equation and the survey format.
 3. consent.html records consent and the selected language in the browser.
 4. context.html presents optional background and beliefs questions.
-5. survey.html presents one parameter at a time and saves drafts locally.
+5. survey.html presents one parameter at a time, saves drafts locally, and displays localized plain-language guidance at the ends of each parameter scale.
 6. The final survey submission sends the complete response to the backend once.
-7. results.html shows the individual and aggregated results.
+7. results.html shows the individual and aggregated results, including the community curve once at least three completed sessions are available.
+8. The results page can share the results image through the device's native share sheet or download it as a PNG when native file sharing is unavailable.
 
-The survey currently supports Portuguese, Spanish, and English through the files in i18n/.
+The survey currently supports Portuguese, Spanish, and English through the files in `i18n/`.
+
+The results page can be bookmarked after submission. Opening it later with the
+session link allows the community distribution to be refreshed as more
+responses are collected.
 
 ## Repository structure
 
@@ -140,6 +146,7 @@ Send the admin token in the `X-Admin-Token` header when accessing protected endp
 - [backend/compute.py](backend/compute.py) implements the Monte Carlo and probability calculations.
 - [questions.json](questions.json) contains the survey questions and parameter bounds.
 - [context.html](context.html) contains the optional background and beliefs page.
+- [results.html](results.html) renders the personal and community distributions and creates the share/download image.
 - [i18n/en.json](i18n/en.json), [i18n/es.json](i18n/es.json), and [i18n/pt.json](i18n/pt.json) hold the translation strings used by the front end.
 - [backend/requirements.txt](backend/requirements.txt) lists the backend dependencies, including `python-dotenv` for `.env` configuration.
 
@@ -176,4 +183,5 @@ https://github.com/ferdesmello/drake-metaculus
 
 - The data/slider_demo.gif image is used in the intro page as a quick visual explanation of the slider controls.
 - The front end is static HTML and JavaScript. Drafts are stored locally in the browser, while the backend is used for the final submission, persistence, and results.
-- The backend README contains additional PostgreSQL setup and deployment notes.
+- Results sharing is client-side: the page renders a PNG summary in the browser and either invokes native file sharing or downloads the image.
+- The [backend README](./backend/README.md) contains additional PostgreSQL setup and deployment notes.

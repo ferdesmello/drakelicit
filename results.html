@@ -531,7 +531,7 @@
 
 		<!-- actions -->
 		<div class="action-row">
-			<a class="action-btn primary" id="share-btn" href="#">↗ <span data-i18n="results_share">Compartilhar
+			<a class="action-btn primary" id="share-btn" href="#"><span id="share-icon">↗</span> <span id="share-label" data-i18n="results_share">Compartilhar
 					resultados</span></a>
 			<a class="action-btn secondary" id="redo-btn" href="#">↺ <span data-i18n="results_redo">Refazer
 					levantamento</span></a>
@@ -587,12 +587,14 @@
 		function probBelow(dist, logT) { return integratePDF(dist.log_N_grid, dist.pdf, -Infinity, logT) / Math.max(1e-30, integratePDF(dist.log_N_grid, dist.pdf, -Infinity, Infinity)); }
 
 		/* ── draw chart ── */
-		function drawChart(yourDist, commDist) {
-			const canvas = document.getElementById('n-canvas');
-			const wrap = document.getElementById('n-canvas-wrap');
-			const dpr = window.devicePixelRatio || 1;
-			const cssW = wrap.clientWidth, cssH = 220;
-			canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+		function drawChart(yourDist, commDist, target) {
+			/* target = { canvas, dpr, cssW, cssH } renders off-screen (image export);
+			   without it the on-page canvas is used. */
+			const canvas = target ? target.canvas : document.getElementById('n-canvas');
+			const dpr = target ? target.dpr : (window.devicePixelRatio || 1);
+			const cssW = target ? target.cssW : document.getElementById('n-canvas-wrap').clientWidth;
+			const cssH = target ? target.cssH : 220;
+			if (!target) { canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px'; }
 			canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
 
 			const ctx = canvas.getContext('2d');
@@ -704,7 +706,236 @@
 			const labelFPx = Math.max(14, Math.round(14 * dpr));
 			ctx.font = `italic ${labelFPx}px system-ui,-apple-system,sans-serif`;
 			ctx.fillStyle = cTxt; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-			ctx.fillText('N  (escala log₁₀)', PAD.left + pw / 2, H - 2 * dpr);
+			ctx.fillText((window._S && window._S.results_axis_label) || 'N  (escala log₁₀)', PAD.left + pw / 2, H - 2 * dpr);
+		}
+
+		/* ══ image export (download / native share) ═════════════════════════
+		 * Builds a PNG of the results (chart + probabilities + parameter table)
+		 * from what is already on screen. No external library: the page is
+		 * re-composed on an off-screen canvas, and the chart reuses drawChart().
+		 * The image carries only the survey's address — never the session link,
+		 * because that private UUID is the only key to the raw answers.
+		 */
+		const EXPORT_FILENAME = 'drake-equation-results.png';
+
+		function canShareFilesNow() {
+			try {
+				return window.matchMedia('(pointer:coarse)').matches && !!navigator.canShare &&
+					navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] });
+			} catch (e) { return false; }
+		}
+
+		function parseSym(html) {            /* "f<sub>p</sub>" -> [{t:'f'},{t:'p',sub:true}] */
+			const parts = []; const re = /<sub>(.*?)<\/sub>|([^<]+)/g; let m;
+			while ((m = re.exec(html))) parts.push(m[1] !== undefined ? { t: m[1], sub: true } : { t: m[2], sub: false });
+			return parts;
+		}
+		function wrapText(ctx, text, maxW) {
+			const words = String(text).split(/\s+/); const lines = []; let line = '';
+			words.forEach(w => {
+				const test = line ? line + ' ' + w : w;
+				if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; } else line = test;
+			});
+			if (line) lines.push(line);
+			return lines;
+		}
+		function roundRect(ctx, x, y, w, h, r) {
+			ctx.beginPath(); ctx.moveTo(x + r, y);
+			ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+			ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+		}
+
+		/* read everything that is on screen (texts are already translated) */
+		function collectExportData(yourDist, commDist) {
+			const T = key => {
+				const el = document.querySelector(`[data-i18n="${key}"]`);
+				return el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
+			};
+			const stats = Array.from(document.querySelectorAll('#stats-row > span')).map(s => ({
+				label: s.firstElementChild.textContent, value: s.querySelector('b').textContent
+			}));
+			const legend = Array.from(document.querySelectorAll('.legend-item'))
+				.filter(el => el.style.display !== 'none')
+				.map(el => {
+					const kind = ['your', 'comm', 'mw', 'univ'].find(k => el.firstElementChild.classList.contains(k));
+					return { kind, dashed: kind === 'mw' || kind === 'univ', label: el.querySelector('span').textContent.trim() };
+				});
+			const probs = [['prob-not-alone-mw', 'green'], ['prob-alone-mw', 'amber'], ['prob-alone-univ', 'blue']]
+				.map(([id, color]) => {
+					const td = document.getElementById(id);
+					return { color, value: td.textContent,
+						label: td.parentElement.querySelector('.prob-label').textContent.replace(/\s+/g, ' ').trim() };
+				});
+			const params = Array.from(document.querySelectorAll('#param-tbody tr')).map(tr => ({
+				symbolHTML: tr.cells[0].innerHTML, name: tr.cells[1].textContent,
+				skipped: !!tr.querySelector('.skipped-tag'),
+				value: tr.cells[2].textContent.replace(/\s+/g, ' ').trim()
+			}));
+			return { yourDist, commDist, stats, legend, probs, params, url: location.host,
+				eyebrow: T('results_eyebrow'), title: T('results_title'), yourN: T('results_your_n'),
+				mcNote: T('results_mc_note'), summary: T('results_summary'),
+				thParam: T('results_th_param'), thMode: T('results_th_mode') };
+		}
+
+		function renderResultsImage(d) {
+			const SC = 2, W = 900, P = 36, CP = 24, IW = W - 2 * P - 2 * CP, X0 = P + CP, BIG_H = 2000;
+			const SANS = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+			const MONO = 'ui-monospace,Menlo,Consolas,monospace';
+			const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+			const C = dark
+				? { bg: '#1a1a18', card: '#242422', border: '#3a3a37', txt: '#f1efe8', mute: '#888780', faint: '#666460', rule: '#3a3a37',
+					green: '#30c070', amber: '#d4a040', blue: '#7090e0', warn: '#e0a84a',
+					your: 'rgba(30,190,120,.92)', comm: 'rgba(210,90,50,.88)', mw: 'rgba(215,155,50,.92)', univ: 'rgba(110,140,225,.92)' }
+				: { bg: '#f5f4f0', card: '#ffffff', border: '#d3d1c7', txt: '#1a1a18', mute: '#5f5e5a', faint: '#888780', rule: '#ebe9e0',
+					green: '#1a8a50', amber: '#a06010', blue: '#3050a0', warn: '#ba7517',
+					your: 'rgba(15,140,80,.88)', comm: 'rgba(170,55,20,.82)', mw: 'rgba(175,110,20,.88)', univ: 'rgba(50,80,180,.88)' };
+
+			const big = document.createElement('canvas');
+			big.width = W * SC; big.height = BIG_H * SC;
+			const ctx = big.getContext('2d');
+			ctx.scale(SC, SC);
+			ctx.textBaseline = 'top';
+
+			const font = (size, weight, family) => `${weight || 400} ${size}px ${family || SANS}`;
+			function text(s, x, y, o) {
+				o = o || {};
+				ctx.font = font(o.size || 14, o.weight, o.family);
+				ctx.fillStyle = o.color || C.txt; ctx.textAlign = o.align || 'left';
+				ctx.fillText(s, x, y);
+				return ctx.measureText(s).width;
+			}
+			function rule(y) {
+				ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X0 + IW, y);
+				ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.setLineDash([]); ctx.stroke();
+			}
+			/* cards are painted AFTER their content, behind it (destination-over),
+			   because their height is only known once the content is laid out */
+			function card(y0, y1) {
+				ctx.save(); ctx.globalCompositeOperation = 'destination-over';
+				roundRect(ctx, P, y0, W - 2 * P, y1 - y0, 12);
+				ctx.strokeStyle = C.border; ctx.lineWidth = 1; ctx.stroke();   /* border first … */
+				ctx.fillStyle = C.card; ctx.fill();                            /* … fill goes behind it */
+				ctx.restore();
+			}
+			function drawSym(html, x, y) {
+				let px = x;
+				parseSym(html).forEach(p => {
+					px += text(p.t, px, p.sub ? y + 6 : y + 1, { size: p.sub ? 10 : 14, family: MONO, color: C.faint });
+				});
+			}
+
+			let y = P;
+			text(d.eyebrow.toUpperCase(), P, y, { size: 12, color: C.faint }); y += 24;
+			text(d.title, P, y, { size: 30, weight: 600 }); y += 52;
+
+			/* ── card 1: your N distribution ── */
+			const c1 = y; let cy = y + CP;
+			text(d.yourN.toUpperCase(), X0, cy, { size: 13, weight: 600, color: C.faint }); cy += 30;
+
+			let sx = X0;
+			d.stats.forEach(s => {
+				ctx.font = font(15); const wl = ctx.measureText(s.label + ': ').width;
+				ctx.font = font(15, 500, MONO); const wv = ctx.measureText(s.value).width;
+				if (sx > X0 && sx + wl + wv > X0 + IW) { sx = X0; cy += 24; }
+				text(s.label + ': ', sx, cy, { size: 15, color: C.faint });
+				text(s.value, sx + wl, cy, { size: 15, weight: 500, family: MONO, color: C.mute });
+				sx += wl + wv + 28;
+			});
+			cy += 28; rule(cy); cy += 14;
+
+			let lx = X0;
+			d.legend.forEach(it => {
+				ctx.font = font(13); const w = ctx.measureText(it.label).width;
+				if (lx > X0 && lx + 32 + w > X0 + IW) { lx = X0; cy += 22; }
+				ctx.beginPath(); ctx.moveTo(lx, cy + 8); ctx.lineTo(lx + 26, cy + 8);
+				ctx.strokeStyle = C[it.kind]; ctx.lineWidth = it.dashed ? 2.5 : 3;
+				ctx.setLineDash(it.dashed ? [5, 3] : []); ctx.stroke(); ctx.setLineDash([]);
+				text(it.label, lx + 32, cy, { size: 13, color: C.faint });
+				lx += 32 + w + 22;
+			});
+			cy += 28;
+
+			const CH = 300, cv = document.createElement('canvas');
+			drawChart(d.yourDist, d.commDist, { canvas: cv, dpr: SC, cssW: IW, cssH: CH });
+			ctx.drawImage(cv, X0, cy, IW, CH); cy += CH + 14;
+
+			d.probs.forEach((p, i) => {
+				ctx.font = font(14);
+				const lines = wrapText(ctx, p.label, IW - 130);
+				if (i > 0) rule(cy);
+				lines.forEach((ln, k) => text(ln, X0, cy + 7 + k * 20, { size: 14, color: C.faint }));
+				text(p.value, X0 + IW, cy + 7 + ((lines.length - 1) * 20) / 2,
+					{ size: 16, weight: 500, family: MONO, color: C[p.color], align: 'right' });
+				cy += lines.length * 20 + 14;
+			});
+			cy += 6;
+			ctx.font = font(12);
+			wrapText(ctx, d.mcNote, IW).forEach(ln => { text(ln, X0 + IW / 2, cy, { size: 12, color: C.faint, align: 'center' }); cy += 17; });
+			cy += CP - 4;
+			card(c1, cy);
+			y = cy + 20;
+
+			/* ── card 2: parameter summary ── */
+			const c2 = y; cy = y + CP;
+			text(d.summary.toUpperCase(), X0, cy, { size: 13, weight: 600, color: C.faint }); cy += 30;
+			text(d.thParam.toUpperCase(), X0 + 52, cy, { size: 11, color: C.faint });
+			text(d.thMode.toUpperCase(), X0 + IW, cy, { size: 11, color: C.faint, align: 'right' }); cy += 22;
+			d.params.forEach(r => {
+				rule(cy);
+				ctx.font = font(14);
+				const lines = wrapText(ctx, r.name, IW - 52 - 300 - 12);
+				const ty = cy + 8;
+				drawSym(r.symbolHTML, X0, ty);
+				lines.forEach((ln, k) => text(ln, X0 + 52, ty + k * 20, { size: 14 }));
+				if (r.skipped) text(r.value, X0 + IW, ty, { size: 12, color: C.warn, align: 'right' });
+				else text(r.value, X0 + IW, ty + 1, { size: 13, family: MONO, color: C.mute, align: 'right' });
+				cy += Math.max(1, lines.length) * 20 + 16;
+			});
+			cy += CP - 8;
+			card(c2, cy);
+			y = cy + 26;
+
+			text(d.url, W / 2, y, { size: 15, weight: 500, align: 'center' });
+			y += 22 + P - 10;
+
+			/* page background, behind everything */
+			ctx.save(); ctx.globalCompositeOperation = 'destination-over';
+			ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, BIG_H); ctx.restore();
+
+			const H = Math.ceil(y);
+			const out = document.createElement('canvas');
+			out.width = W * SC; out.height = H * SC;
+			out.getContext('2d').drawImage(big, 0, 0, W * SC, H * SC, 0, 0, W * SC, H * SC);
+			return out;
+		}
+
+		/* wire the button. The image is pre-rendered so the click handler can
+		   share/download immediately (navigator.share needs a fresh user gesture). */
+		function setupExport(yourDist, commDist, nativeShare) {
+			const btn = document.getElementById('share-btn');
+			const ready = new Promise(resolve => {
+				try { renderResultsImage(collectExportData(yourDist, commDist)).toBlob(resolve, 'image/png'); }
+				catch (e) { console.warn('image export failed:', e); resolve(null); }
+			});
+			btn.onclick = async function (e) {
+				e.preventDefault();
+				const blob = await ready;
+				if (!blob) return;
+				const file = new File([blob], EXPORT_FILENAME, { type: 'image/png' });
+				if (nativeShare) {
+					try {
+						await navigator.share({ files: [file], title: document.title, text: location.origin + '/' });
+						return;
+					} catch (err) {
+						if (err && err.name === 'AbortError') return;   /* user closed the share sheet */
+					}                                                  /* anything else: fall back to download */
+				}
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url; a.download = EXPORT_FILENAME;
+				document.body.appendChild(a); a.click(); a.remove();
+				setTimeout(() => URL.revokeObjectURL(url), 2000);
+			};
 		}
 
 		/* ── main async block ── */
@@ -733,6 +964,14 @@
 			];
 			let S = {}, questions = [], individualN = null, communityData = null;
 			[S, questions, individualN, communityData] = await Promise.all(fetches);
+			window._S = S;
+
+			/* touch device with native file sharing -> "Share"; otherwise -> "Download" */
+			const nativeShare = canShareFilesNow();
+			if (!nativeShare) {
+				document.getElementById('share-icon').textContent = '↓';
+				document.getElementById('share-label').dataset.i18n = 'results_download';
+			}
 
 			/* i18n */
 			document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -823,6 +1062,10 @@
 				}
 				tbody.appendChild(row);
 			});
+
+			/* image export: only makes sense when there is a N distribution of your own */
+			if (yourDist && !yourDist.error) setupExport(yourDist, commDist, nativeShare);
+			else document.getElementById('share-btn').style.display = 'none';
 		})();
 	</script>
 </body>
