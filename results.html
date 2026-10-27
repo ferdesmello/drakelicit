@@ -692,14 +692,26 @@
 			const range = Math.ceil(tMax) - Math.floor(tMin);
 			const step = range <= 10 ? 1 : range <= 20 ? 2 : range <= 50 ? 5 : 10;
 			const minGap = 34 * dpr;
+			const cTick = dark ? 'rgba(255,255,255,.30)' : 'rgba(0,0,0,.28)';   /* tick marks (the axis line itself stays fainter) */
 			let lastPx = -Infinity;
-			for (let e = Math.floor(tMin); e <= Math.ceil(tMax); e += step) {
+			const labelled = new Set();
+			/* labelled ticks sit on multiples of `step` (… -10, -5, 0, 5 …) so that 10⁰ is always a candidate;
+			   one is skipped if it would collide with the previous label */
+			for (let e = Math.ceil(tMin / step) * step; e <= tMax + 1e-9; e += step) {
 				const px = xpx(e);
 				if (px - lastPx < minGap || px < PAD.left || px > W - PAD.right) continue;
-				lastPx = px;
+				lastPx = px; labelled.add(e);
 				ctx.fillText(formatLogTick(e), px, tickY);
-				ctx.beginPath(); ctx.moveTo(px, PAD.top + ph); ctx.lineTo(px, PAD.top + ph + 3 * dpr);
-				ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
+				ctx.beginPath(); ctx.moveTo(px, PAD.top + ph); ctx.lineTo(px, PAD.top + ph + 4 * dpr);
+				ctx.strokeStyle = cTick; ctx.lineWidth = dpr; ctx.stroke();
+			}
+			/* every other whole decade: a shorter tick without label */
+			for (let e = Math.ceil(tMin); e <= Math.floor(tMax); e++) {
+				if (labelled.has(e)) continue;
+				const px = xpx(e);
+				if (px < PAD.left || px > W - PAD.right) continue;
+				ctx.beginPath(); ctx.moveTo(px, PAD.top + ph); ctx.lineTo(px, PAD.top + ph + 2.5 * dpr);
+				ctx.strokeStyle = cTick; ctx.lineWidth = dpr; ctx.stroke();
 			}
 
 			/* ── x-axis label "N" centred below ticks ── */
