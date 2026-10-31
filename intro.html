@@ -30,6 +30,7 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
   border-radius:10px;
   overflow:hidden;
   margin-top:1.1rem;
+  margin-bottom:1.25rem;   /* space between the GIF and step 2 */
 }
 .demo-block img{
   display:block;
@@ -52,16 +53,16 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
 .nav-btn:hover{opacity:.85}
 @media(prefers-color-scheme:dark){
   body{background:#1a1a18;color:#f1efe8}
-  .back-link{color:#666460}.back-link:hover{color:#888780}
-  .intro-section h2{color:#666460}
-  .intro-section p,.steps li{color:#b4b2a9}
+  .back-link{color:#9c9a92}.back-link:hover{color:#b4b2a9}
+  .intro-section h2{color:#f1efe8}
+  .intro-section p,.steps li{color:#d4d2c8}
   .equation-box{background:#242422;border-color:#3a3a37;color:#f1efe8}
-  .eq-note{color:#666460}
+  .eq-note{color:#9c9a92}
   .steps li::before{background:#d4d2c8;color:#1a1a18}
   .nav-btn{background:#d4d2c8;color:#1a1a18}
   .demo-block{background:#242422;border-color:#3a3a37}
   .demo-block img{background:#333330}
-  .demo-caption{color:#666460;border-color:#3a3a37}
+  .demo-caption{color:#b4b2a9;border-color:#3a3a37}
 }
 </style>
 </head>
@@ -69,6 +70,10 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
 <div id="wrap">
   <a class="back-link" id="back-link" href="index.html">← <span data-i18n="intro_back">Início</span></a>
   <h1 data-i18n="intro_title">O que é este levantamento?</h1>
+
+  <div class="intro-section">
+    <p data-i18n="intro_body">Estamos interessados em entender como diferentes pessoas percebem a probabilidade de existência de vida inteligente no universo.</p>
+  </div>
 
   <div class="intro-section">
     <h2 data-i18n="intro_eq_title">A Equação de Drake</h2>
@@ -79,7 +84,6 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
   </div>
 
   <div class="intro-section">
-    <h2 data-i18n="intro_why_title">Por que um levantamento?</h2>
     <p data-i18n="intro_why_body">Os valores dos parâmetros são profundamente incertos e dependem de áreas do conhecimento muito distintas.</p>
   </div>
 
@@ -87,19 +91,18 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:1.25rem}
     <h2 data-i18n="intro_how_title">Como funciona</h2>
     <ol class="steps">
       <li data-i18n="intro_step1">Para cada parâmetro você moverá um controle deslizante que define uma distribuição de probabilidade.</li>
+	      <!-- slider demo -->
+		<div class="demo-block">
+		<img src="/data/slider_demo.gif"
+			alt="Demonstração do controle deslizante"
+			loading="lazy" />
+		<p class="demo-caption" data-i18n="intro_demo_caption">
+			Arraste a alça central (■) para mover o pico e as alças laterais (○) para ajustar a incerteza.
+		</p>
+		</div>
       <li data-i18n="intro_step2">Ao final, sua distribuição pessoal de N será calculada.</li>
       <li data-i18n="intro_step3">Você poderá retornar mais tarde para consultar os resultados agregados.</li>
     </ol>
-
-    <!-- slider demo -->
-    <div class="demo-block">
-      <img src="/data/slider_demo.gif"
-           alt="Demonstração do controle deslizante"
-           loading="lazy" />
-      <p class="demo-caption" data-i18n="intro_demo_caption">
-        Arraste a alça central (■) para mover o pico e as alças laterais (○) para ajustar a incerteza.
-      </p>
-    </div>
   </div>
 
   <div class="nav-row">

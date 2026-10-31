@@ -335,23 +335,23 @@
 			}
 
 			.eyebrow {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.subtitle {
-				color: #888780
+				color: #b4b2a9
 			}
 
 			.legend {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.mc-note {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.community-note {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.result-card {
@@ -360,16 +360,16 @@
 			}
 
 			.result-card h2 {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.stats-row {
-				color: #666460;
+				color: #9c9a92;
 				border-color: #3a3a37
 			}
 
 			.stats-row span b {
-				color: #888780
+				color: #b4b2a9
 			}
 
 			.prob-table td {
@@ -377,7 +377,7 @@
 			}
 
 			.prob-label {
-				color: #888780
+				color: #b4b2a9
 			}
 
 			.color-not-alone-mw {
@@ -401,7 +401,7 @@
 			}
 
 			.param-table th {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.param-table td {
@@ -410,11 +410,11 @@
 			}
 
 			.param-table td:last-child {
-				color: #888780
+				color: #b4b2a9
 			}
 
 			.param-sym {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.skipped-tag {
@@ -437,7 +437,7 @@
 			}
 
 			.footer-note {
-				color: #555450
+				color: #8a8880
 			}
 		}
 	</style>
@@ -677,14 +677,14 @@
 				'N=5×10⁻¹³');
 
 			/* ── axis line ── */
-			const cAx = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
+			const cAx = dark ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.25)';
 			ctx.beginPath();
 			ctx.moveTo(PAD.left, PAD.top + ph); ctx.lineTo(PAD.left + pw, PAD.top + ph);
 			ctx.strokeStyle = cAx; ctx.lineWidth = dpr; ctx.stroke();
 
 			/* ── tick labels ── */
 			const fPx = Math.max(14, Math.round(16 * dpr));
-			const cTxt = dark ? 'rgba(255,255,255,.38)' : 'rgba(0,0,0,.38)';
+			const cTxt = dark ? 'rgba(255,255,255,.72)' : 'rgba(0,0,0,.68)';
 			ctx.fillStyle = cTxt;
 			ctx.font = `${fPx}px system-ui,-apple-system,sans-serif`;
 			ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -692,7 +692,7 @@
 			const range = Math.ceil(tMax) - Math.floor(tMin);
 			const step = range <= 10 ? 1 : range <= 20 ? 2 : range <= 50 ? 5 : 10;
 			const minGap = 34 * dpr;
-			const cTick = dark ? 'rgba(255,255,255,.30)' : 'rgba(0,0,0,.28)';   /* tick marks (the axis line itself stays fainter) */
+			const cTick = dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.50)';   /* tick marks (the axis line itself stays fainter) */
 			let lastPx = -Infinity;
 			const labelled = new Set();
 			/* labelled ticks sit on multiples of `step` (… -10, -5, 0, 5 …) so that 10⁰ is always a candidate;
@@ -795,7 +795,7 @@
 			const MONO = 'ui-monospace,Menlo,Consolas,monospace';
 			const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
 			const C = dark
-				? { bg: '#1a1a18', card: '#242422', border: '#3a3a37', txt: '#f1efe8', mute: '#888780', faint: '#666460', rule: '#3a3a37',
+				? { bg: '#1a1a18', card: '#242422', border: '#3a3a37', txt: '#f1efe8', mute: '#b4b2a9', faint: '#9c9a92', rule: '#3a3a37',
 					green: '#30c070', amber: '#d4a040', blue: '#7090e0', warn: '#e0a84a',
 					your: 'rgba(30,190,120,.92)', comm: 'rgba(210,90,50,.88)', mw: 'rgba(215,155,50,.92)', univ: 'rgba(110,140,225,.92)' }
 				: { bg: '#f5f4f0', card: '#ffffff', border: '#d3d1c7', txt: '#1a1a18', mute: '#5f5e5a', faint: '#888780', rule: '#ebe9e0',

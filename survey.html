@@ -68,30 +68,27 @@
 		}
 
 		/* param chip + question */
-		.param-chip {
-			display: inline-flex;
-			align-items: center;
-			gap: 6px;
-			font-size: 16px;
-			font-family: monospace;
-			padding: 3px 10px;
-			border: 0.5px solid #b4b2a9;
-			border-radius: 6px;
-			color: #5f5e5a;
-			margin-bottom: .8rem;
+		.question-card {
+			display: flex;
+			align-items: baseline;
+			gap: .65rem;
+			background: #fff;
+			border: 0.5px solid #d3d1c7;
+			border-radius: 12px;
+			padding: .9rem 1.1rem;
+			margin-bottom: .9rem;
 		}
-
+		.q-symbol {
+			font-family: monospace;
+			font-size: 18px;
+			color: #5f5e5a;
+			flex-shrink: 0;
+		}
+		.q-dot { color: #b4b2a9; flex-shrink: 0; }
 		.question-title {
-			font-size: 22px;
+			font-size: 20px;
 			font-weight: 500;
 			line-height: 1.3;
-			margin-bottom: .35rem
-		}
-
-		.axis-note {
-			font-size: 16px;
-			color: #888780;
-			margin-bottom: 1.5rem
 		}
 
 		/* slider card */
@@ -435,7 +432,7 @@
 			}
 
 			.question-title {
-				font-size: 18px
+				font-size: 17px
 			}
 
 			.inputs-row {
@@ -473,13 +470,12 @@
 			.progress-label,
 			.progress-count,
 			.axis-note {
-				color: #666460
+				color: #9c9a92
 			}
 
-			.param-chip {
-				border-color: #444441;
-				color: #888780
-			}
+			.question-card { background: #242422; border-color: #3a3a37 }
+			.q-symbol { color: #b4b2a9 }
+			.q-dot { color: #444441 }
 
 			.slider-card {
 				background: #242422;
@@ -488,11 +484,11 @@
 
 			.slider-hint,
 			.derived-row {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.derived-row span b {
-				color: #888780
+				color: #b4b2a9
 			}
 
 			.inp-box {
@@ -500,7 +496,7 @@
 			}
 
 			.inp-box label {
-				color: #666460
+				color: #9c9a92
 			}
 
 			.inp-box input {
@@ -512,12 +508,12 @@
 			}
 
 			.inp-box .boundary-text {
-				color: #555450
+				color: #8a8880
 			}
 
 			.hdl {
 				background: #242422;
-				border-color: #888780
+				border-color: #b4b2a9
 			}
 
 			.hdl:hover,
@@ -540,18 +536,18 @@
 			}
 
 			#track-fill {
-				background: #888780
+				background: #b4b2a9
 			}
 
 			.skip-btn {
 				border-color: #444441;
-				color: #666460
+				color: #9c9a92
 			}
 
 			.skip-btn:hover {
 				background: #333330;
-				border-color: #666460;
-				color: #888780
+				border-color: #9c9a92;
+				color: #b4b2a9
 			}
 
 			.skip-warning {
@@ -575,7 +571,7 @@
 
 			.skip-confirm-btn.cancel {
 				border-color: #444441;
-				color: #666460
+				color: #9c9a92
 			}
 
 			.skip-confirm-btn.cancel:hover {
@@ -605,7 +601,7 @@
 			}
 
 			.autosave {
-				color: #555450
+				color: #8a8880
 			}
 		}
 	</style>
@@ -625,13 +621,11 @@
 			</div>
 		</div>
 
-		<div class="param-chip">
-			<span id="param-symbol"></span>
-			&nbsp;·&nbsp;
-			<span id="param-name"></span>
+		<div class="question-card">
+			<span class="q-symbol" id="param-symbol"></span>
+			<span class="q-dot" aria-hidden="true">·</span>
+			<h1 class="question-title" id="question-title"></h1>
 		</div>
-		<h1 class="question-title" id="question-title"></h1>
-		<p class="axis-note" id="axis-note"></p>
 
 		<div class="slider-card" id="slider-card">
 			<p class="slider-hint" data-i18n="slider_hint">O pico é o valor mais provável. As alças laterais definem sua
@@ -743,9 +737,7 @@
 			window._questions = questions;
 
 			document.getElementById('param-symbol').innerHTML = Q.symbolHTML;
-			document.getElementById('param-name').textContent = S[Q.paramKey];
 			document.getElementById('question-title').textContent = S[Q.questionKey];
-			document.getElementById('axis-note').textContent = S[Q.axisKey];
 
 			document.querySelector('.progress-count').textContent =
 				`${qIndex + 1} / ${questions.length}`;
@@ -1073,10 +1065,10 @@
 				const cStr = dark ? 'rgba(200,160,100,.88)' : 'rgba(140,84,28,.82)';
 				const cFil = dark ? 'rgba(200,160,100,.20)' : 'rgba(180,120,50,.16)';
 				const cIQR = dark ? 'rgba(60,155,115,.33)'  : 'rgba(20,135,85,.23)';
-				const cAx  = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)';
-				const cTxt = dark ? 'rgba(255,255,255,.42)' : 'rgba(0,0,0,.40)';
-				const cDsh = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.12)';
-				const cTk  = dark ? 'rgba(255,255,255,.30)' : 'rgba(0,0,0,.28)';   /* tick marks */
+				const cAx  = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.25)';
+				const cTxt = dark ? 'rgba(255,255,255,.42)' : 'rgba(0,0,0,.68)';
+				const cDsh = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.22)';
+				const cTk  = dark ? 'rgba(255,255,255,.30)' : 'rgba(0,0,0,.50)';   /* tick marks */
 
 				/* Build PDF on the [tMin, tMax] grid — truncated and renormalized */
 				const N = 500;
@@ -1296,7 +1288,7 @@
 					const data = JSON.parse(raw);
 					if (data.skipped) {
 						skipped = true; setSkippedUI(true);
-					} else if (data.tLo !== undefined && data.tMode !== undefined && data.tHi !== undefined) {
+					} else if (data.answered && data.tLo !== undefined && data.tMode !== undefined && data.tHi !== undefined) {
 						tLo = data.tLo; tMode = data.tMode; tHi = data.tHi;
 						answerPreviouslySaved = true;
 					}
@@ -1500,14 +1492,23 @@
 				const currentQ = parseInt(params.get('q')) || 0;
 				const nextQ    = currentQ + dir;
 				const lang     = params.get('lang') || 'pt';
+				const answered = hasInteracted || skipped || answerPreviouslySaved;
 
+				/* BACK: never requires an answer. Only save if there is one,
+				so that an untouched question does not leave a fake draft. */
 				if (dir < 0) {
+					if (answered) saveDraft();
 					if (nextQ < 0) {
-						location.href = `context.html?lang=${lang}`;   // was: return;
+						location.href = `context.html?lang=${lang}`;
 						return;
 					}
+					params.set('q', nextQ);
+					location.search = params.toString();
+					return;
 				}
-				if (!hasInteracted && !skipped && !answerPreviouslySaved) {
+
+				/* FORWARD: needs an answer */
+				if (!answered) {
 					const warn = document.getElementById('interaction-warning');
 					if (warn) warn.style.display = 'block';
 					return;
