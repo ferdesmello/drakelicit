@@ -119,8 +119,8 @@ h1{font-size:24px;font-weight:600;line-height:1.25;margin-bottom:.6rem}
 /*
  * CNPq "Tabela de Áreas do Conhecimento" — grande área → área (2nd level only,
  * not subárea/especialidade). Source: CNPq official table, cross-checked
- * against FAPESP's mirror. Terms kept in Portuguese in all three languages
- * since this is the official Brazilian nomenclature.
+ * against FAPESP's mirror. The Portuguese names are the canonical values
+ * stored in the database; see CNPQ_LABELS below for the displayed translations.
  *
  * "Outra / Multidisciplinar" is not in CNPq's original 8-área table but is
  * commonly added as a 9th catch-all (FAPESP's own selector lists it as
@@ -138,6 +138,210 @@ const CNPQ_AREAS = {
   "Linguística, Letras e Artes": ["Linguística","Letras","Artes"],
   "Outra / Multidisciplinar": []
 };
+
+/*
+ * Display labels (direct translations, NOT official CNPq nomenclature).
+ * Keys are the canonical Portuguese names stored in the database; Portuguese
+ * needs no entry (falls back to the key itself).
+ */
+const CNPQ_LABELS = {
+  en: {
+    "Ciências Exatas e da Terra": "Exact and Earth Sciences",
+    "Ciências Biológicas": "Biological Sciences",
+    "Engenharias": "Engineering",
+    "Ciências da Saúde": "Health Sciences",
+    "Ciências Agrárias": "Agricultural Sciences",
+    "Ciências Sociais Aplicadas": "Applied Social Sciences",
+    "Ciências Humanas": "Humanities",
+    "Linguística, Letras e Artes": "Linguistics, Literature and Arts",
+    "Outra / Multidisciplinar": "Other / Multidisciplinary",
+
+    "Matemática": "Mathematics",
+    "Probabilidade e Estatística": "Probability and Statistics",
+    "Ciência da Computação": "Computer Science",
+    "Astronomia": "Astronomy",
+    "Física": "Physics",
+    "Química": "Chemistry",
+    "Geociências": "Geosciences",
+    "Oceanografia": "Oceanography",
+
+    "Biologia Geral": "General Biology",
+    "Genética": "Genetics",
+    "Botânica": "Botany",
+    "Zoologia": "Zoology",
+    "Ecologia": "Ecology",
+    "Morfologia": "Morphology",
+    "Fisiologia": "Physiology",
+    "Bioquímica": "Biochemistry",
+    "Biofísica": "Biophysics",
+    "Farmacologia": "Pharmacology",
+    "Imunologia": "Immunology",
+    "Microbiologia": "Microbiology",
+    "Parasitologia": "Parasitology",
+
+    "Engenharia Civil": "Civil Engineering",
+    "Engenharia de Minas": "Mining Engineering",
+    "Engenharia de Materiais e Metalúrgica": "Materials and Metallurgical Engineering",
+    "Engenharia Elétrica": "Electrical Engineering",
+    "Engenharia Mecânica": "Mechanical Engineering",
+    "Engenharia Química": "Chemical Engineering",
+    "Engenharia Sanitária": "Sanitary Engineering",
+    "Engenharia de Produção": "Industrial Engineering",
+    "Engenharia Nuclear": "Nuclear Engineering",
+    "Engenharia de Transportes": "Transportation Engineering",
+    "Engenharia Naval e Oceânica": "Naval and Ocean Engineering",
+    "Engenharia Aeroespacial": "Aerospace Engineering",
+    "Engenharia Biomédica": "Biomedical Engineering",
+
+    "Medicina": "Medicine",
+    "Odontologia": "Dentistry",
+    "Farmácia": "Pharmacy",
+    "Enfermagem": "Nursing",
+    "Nutrição": "Nutrition",
+    "Saúde Coletiva": "Public Health",
+    "Fonoaudiologia": "Speech-Language Pathology",
+    "Fisioterapia e Terapia Ocupacional": "Physical and Occupational Therapy",
+    "Educação Física": "Physical Education",
+
+    "Agronomia": "Agronomy",
+    "Recursos Florestais e Engenharia Florestal": "Forest Resources and Forest Engineering",
+    "Engenharia Agrícola": "Agricultural Engineering",
+    "Zootecnia": "Animal Science",
+    "Medicina Veterinária": "Veterinary Medicine",
+    "Recursos Pesqueiros e Engenharia de Pesca": "Fishery Resources and Fisheries Engineering",
+    "Ciência e Tecnologia de Alimentos": "Food Science and Technology",
+
+    "Direito": "Law",
+    "Administração": "Business Administration",
+    "Economia": "Economics",
+    "Arquitetura e Urbanismo": "Architecture and Urbanism",
+    "Planejamento Urbano e Regional": "Urban and Regional Planning",
+    "Demografia": "Demography",
+    "Ciência da Informação": "Information Science",
+    "Museologia": "Museology",
+    "Comunicação": "Communication",
+    "Serviço Social": "Social Work",
+    "Economia Doméstica": "Home Economics",
+    "Desenho Industrial": "Industrial Design",
+    "Turismo": "Tourism",
+
+    "Filosofia": "Philosophy",
+    "Sociologia": "Sociology",
+    "Antropologia": "Anthropology",
+    "Arqueologia": "Archaeology",
+    "História": "History",
+    "Geografia": "Geography",
+    "Psicologia": "Psychology",
+    "Educação": "Education",
+    "Ciência Política": "Political Science",
+    "Teologia": "Theology",
+
+    "Linguística": "Linguistics",
+    "Letras": "Literature and Languages",
+    "Artes": "Arts"
+  },
+  es: {
+    "Ciências Exatas e da Terra": "Ciencias Exactas y de la Tierra",
+    "Ciências Biológicas": "Ciencias Biológicas",
+    "Engenharias": "Ingenierías",
+    "Ciências da Saúde": "Ciencias de la Salud",
+    "Ciências Agrárias": "Ciencias Agrarias",
+    "Ciências Sociais Aplicadas": "Ciencias Sociales Aplicadas",
+    "Ciências Humanas": "Humanidades",
+    "Linguística, Letras e Artes": "Lingüística, Letras y Artes",
+    "Outra / Multidisciplinar": "Otra / Multidisciplinaria",
+
+    "Matemática": "Matemática",
+    "Probabilidade e Estatística": "Probabilidad y Estadística",
+    "Ciência da Computação": "Ciencias de la Computación",
+    "Astronomia": "Astronomía",
+    "Física": "Física",
+    "Química": "Química",
+    "Geociências": "Geociencias",
+    "Oceanografia": "Oceanografía",
+
+    "Biologia Geral": "Biología General",
+    "Genética": "Genética",
+    "Botânica": "Botánica",
+    "Zoologia": "Zoología",
+    "Ecologia": "Ecología",
+    "Morfologia": "Morfología",
+    "Fisiologia": "Fisiología",
+    "Bioquímica": "Bioquímica",
+    "Biofísica": "Biofísica",
+    "Farmacologia": "Farmacología",
+    "Imunologia": "Inmunología",
+    "Microbiologia": "Microbiología",
+    "Parasitologia": "Parasitología",
+
+    "Engenharia Civil": "Ingeniería Civil",
+    "Engenharia de Minas": "Ingeniería de Minas",
+    "Engenharia de Materiais e Metalúrgica": "Ingeniería de Materiales y Metalúrgica",
+    "Engenharia Elétrica": "Ingeniería Eléctrica",
+    "Engenharia Mecânica": "Ingeniería Mecánica",
+    "Engenharia Química": "Ingeniería Química",
+    "Engenharia Sanitária": "Ingeniería Sanitaria",
+    "Engenharia de Produção": "Ingeniería Industrial",
+    "Engenharia Nuclear": "Ingeniería Nuclear",
+    "Engenharia de Transportes": "Ingeniería de Transporte",
+    "Engenharia Naval e Oceânica": "Ingeniería Naval y Oceánica",
+    "Engenharia Aeroespacial": "Ingeniería Aeroespacial",
+    "Engenharia Biomédica": "Ingeniería Biomédica",
+
+    "Medicina": "Medicina",
+    "Odontologia": "Odontología",
+    "Farmácia": "Farmacia",
+    "Enfermagem": "Enfermería",
+    "Nutrição": "Nutrición",
+    "Saúde Coletiva": "Salud Colectiva",
+    "Fonoaudiologia": "Fonoaudiología",
+    "Fisioterapia e Terapia Ocupacional": "Fisioterapia y Terapia Ocupacional",
+    "Educação Física": "Educación Física",
+
+    "Agronomia": "Agronomía",
+    "Recursos Florestais e Engenharia Florestal": "Recursos Forestales e Ingeniería Forestal",
+    "Engenharia Agrícola": "Ingeniería Agrícola",
+    "Zootecnia": "Zootecnia",
+    "Medicina Veterinária": "Medicina Veterinaria",
+    "Recursos Pesqueiros e Engenharia de Pesca": "Recursos Pesqueros e Ingeniería Pesquera",
+    "Ciência e Tecnologia de Alimentos": "Ciencia y Tecnología de Alimentos",
+
+    "Direito": "Derecho",
+    "Administração": "Administración",
+    "Economia": "Economía",
+    "Arquitetura e Urbanismo": "Arquitectura y Urbanismo",
+    "Planejamento Urbano e Regional": "Planificación Urbana y Regional",
+    "Demografia": "Demografía",
+    "Ciência da Informação": "Ciencias de la Información",
+    "Museologia": "Museología",
+    "Comunicação": "Comunicación",
+    "Serviço Social": "Trabajo Social",
+    "Economia Doméstica": "Economía Doméstica",
+    "Desenho Industrial": "Diseño Industrial",
+    "Turismo": "Turismo",
+
+    "Filosofia": "Filosofía",
+    "Sociologia": "Sociología",
+    "Antropologia": "Antropología",
+    "Arqueologia": "Arqueología",
+    "História": "Historia",
+    "Geografia": "Geografía",
+    "Psicologia": "Psicología",
+    "Educação": "Educación",
+    "Ciência Política": "Ciencia Política",
+    "Teologia": "Teología",
+
+    "Linguística": "Lingüística",
+    "Letras": "Letras",
+    "Artes": "Artes"
+  }
+};
+
+let CURRENT_LANG = 'pt';
+/* label shown to the participant; the option VALUE stays the Portuguese key */
+function areaLabel(key) {
+  return (CNPQ_LABELS[CURRENT_LANG] && CNPQ_LABELS[CURRENT_LANG][key]) || key;
+}
 
 /*
  * Belief questions. Deliberately a flat array so trimming is a one-line delete.
@@ -164,7 +368,7 @@ function buildAreaSelect() {
   const sel = document.getElementById('sel-grande');
   Object.keys(CNPQ_AREAS).forEach(g => {
     const opt = document.createElement('option');
-    opt.value = g; opt.textContent = g;
+    opt.value = g; opt.textContent = areaLabel(g);
     sel.appendChild(opt);
   });
   sel.addEventListener('change', () => {
@@ -176,7 +380,7 @@ function buildAreaSelect() {
     if (sel.value && list.length) {
       list.forEach(a => {
         const o = document.createElement('option');
-        o.value = a; o.textContent = a;
+        o.value = a; o.textContent = areaLabel(a);
         esp.appendChild(o);
       });
       field.style.display = '';
@@ -284,6 +488,7 @@ function loadSaved() {
   const ul = new URLSearchParams(location.search).get('lang');
   const bl = (navigator.language || 'pt').slice(0, 2);
   const lang = supported.includes(ul) ? ul : supported.includes(bl) ? bl : 'pt';
+  CURRENT_LANG = lang;
   document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
 
   document.getElementById('back-link').href = `consent.html?lang=${lang}`;

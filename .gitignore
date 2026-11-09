@@ -1,5 +1,6 @@
 backend/__pycache__/
 __pycache__/
+presentation/
 server.txt
 token.txt
 .env
