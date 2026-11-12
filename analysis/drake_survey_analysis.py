@@ -275,8 +275,8 @@ def figure_context(context: pd.DataFrame, out: Path):
 
 def draw_param(ax, q, t_grid, pdfs, pool, n):
     x = to_x(t_grid, q)
-    for p in pdfs:                       # thin individual curves
-        ax.plot(x, p, color="blue", alpha=0.12, linewidth=0.8)
+    #for p in pdfs:                       # thin individual curves
+    #    ax.plot(x, p, color="blue", alpha=0.12, linewidth=0.8)
     ax.plot(x, pool, color="blue", linewidth=2)
     ax.fill_between(x, pool, color="blue", alpha=0.1)
     ax.set_xlim(x[0], x[-1])             # axis = the question's own range, as in the survey
@@ -381,6 +381,200 @@ def draw_N_cdf(ax, log_N):
     ax.axvline(1, color="green", linestyle="dashed", linewidth=1.5)
     ax.axvline(5e-13, color="red", linestyle="dashed", linewidth=1.5)
 
+# ── cumulative products: N using only the first k parameters ──────────────
+
+def community_logN_cumulative(pools: dict, questions: list, n_mc: int,
+                              seed: int = 1, k_min: int = 3) -> dict:
+    """
+    log10 of the product of the first k parameters, for k = k_min ... len(questions).
+
+    Each parameter is sampled ONCE (same order and same seed as community_logN),
+    and the running sum of log10 values is stored after each parameter. So the
+    curves are nested, and k = 7 is identical to community_logN().
+    Returns {k: array of log10 samples}.
+    """
+    rng = np.random.default_rng(seed)
+    total = np.zeros(n_mc)
+    out = {}
+    for i, q in enumerate(questions, start=1):
+        t_grid, pool = pools[q["id"]]
+        t = sample_from_grid_pdf(t_grid, pool, n_mc, rng)
+        if q.get("axisMode", "log") == "log":
+            total += t
+        else:
+            total += np.log10(np.maximum(t, 1e-300))
+        if i >= k_min:
+            out[i] = total.copy()
+    return out
+
+
+# what the product of the first k terms means (k = 7 is N itself)
+CUM_MEANING = {
+    3: "Habitable planets in the Milky Way",
+    4: "Planets with life",
+    5: "Planets with intelligent life",
+    6: "Planets that ever develop civilizations\ncapable of interstellar communication",
+    7: "Detectable civilizations now ($N$)",
+}
+
+
+def cum_formula(questions: list, k: int) -> str:
+    """Mathtext of the product of the first k parameters, e.g. $N_{\\star}\\,f_{p}\\,n_{e}$."""
+    syms = [PARAM_LABELS.get(q["id"], (q["id"], ""))[0].strip("$") for q in questions[:k]]
+    return "$" + r"\,\cdot\," .join(syms) + "$"
+
+
+def summarize_logX(log_X: np.ndarray) -> dict:
+    pc = lambda p: float(np.percentile(log_X, p))
+    return {
+        "median": 10 ** pc(50),
+        "q05": 10 ** pc(5), "q25": 10 ** pc(25),
+        "q75": 10 ** pc(75), "q95": 10 ** pc(95),
+        "p_gt_1": 100 * float(np.mean(log_X > 0)),
+    }
+
+
+def kde_curve(log_X: np.ndarray, lo: float, hi: float, n: int = 800):
+    sub = log_X if len(log_X) <= 30_000 else np.random.default_rng(0).choice(log_X, 30_000, replace=False)
+    kde = gaussian_kde(sub, bw_method="scott")
+    grid = np.linspace(lo, hi, n)
+    pdf = kde(grid)
+    pdf /= trapz(pdf, grid)
+    return grid, pdf
+
+
+def limits_logX(log_X: np.ndarray):
+    return float(np.percentile(log_X, 0.1) - 1), float(np.percentile(log_X, 99.9) + 1)
+
+
+# noun phrase used in the labels of each cumulative figure
+CUM_NOUN = {
+    3: "habitable\nplanet",
+    4: "planet\nwith life",
+    5: "planet with\nintelligent life",
+    6: "planet with\ncommunicating\ncivilizations",
+}
+
+
+def draw_partial_N(ax, log_X: np.ndarray, k: int, questions: list, n_sessions: int,
+                   show_universe: bool = False):
+    """
+    One figure for the product of the first k parameters (k < 7), in the same
+    style as the final N figure: hatched regions, dashed reference lines and
+    the probability of each region written inside the figure.
+
+    show_universe=True adds the observable-universe part (line at 5e-13, extra
+    hatching and a third label). The axis is then widened to contain both
+    reference lines, as in the final N figure.
+
+    If 1 falls outside the axis (show_universe=False and all the mass on one
+    side), a single label says so.
+    """
+    lo, hi = limits_logX(log_X)
+    if show_universe:
+        lo = min(lo, REF_UNIV - 1)
+        hi = max(hi, REF_MW + 1)
+    grid, pdf = kde_curve(log_X, lo, hi)
+    x = 10.0 ** grid
+    p_gt = 100 * float(np.mean(log_X > REF_MW))        # P(X > 1)
+    p_lt = 100 * float(np.mean(log_X < REF_MW))        # P(X < 1)
+    p_univ = 100 * float(np.mean(log_X < REF_UNIV))    # P(X < 5e-13)
+    noun = CUM_NOUN.get(k, "such planets")
+
+    ax.plot(x, pdf, color="red", linewidth=2, zorder=5)
+    ax.fill_between(x, pdf, color="red", alpha=0.1)
+    ax.set_xlim(x[0], x[-1])
+    ax.set_ylim(0, float(pdf.max()) * 1.18)
+    ymax = ax.get_ylim()[1]
+
+    box = dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.55)
+    dens = lambda t: float(np.interp(t, grid, pdf))
+
+    def put(t_center, y_text, text, pct, ha="center"):
+        xx = 10.0 ** t_center
+        ax.text(xx, y_text, text, fontsize=8, color=DARK, ha=ha, va="center",
+                zorder=10, bbox=box)
+        ax.text(xx, ymax * 0.05, pct, fontsize=12, color=DARK, ha=ha, va="bottom",
+                zorder=10)
+
+    if lo < REF_MW < hi:
+        # hatches, as in the final N figure
+        ax.fill_between(x, pdf, where=grid >= REF_MW, hatch="||", facecolor="none",
+                        edgecolor=(0, 0, 0, 0.3), linewidth=0, zorder=1)
+        ax.fill_between(x, pdf, where=grid <= REF_MW, hatch="\\\\", facecolor=(0, 1, 0, 0.1),
+                        edgecolor=(0, 0, 0, 0.3), linewidth=0, zorder=1)
+        ax.vlines(x=1, ymin=0, ymax=dens(REF_MW), color="green", linestyle="dashed",
+                  linewidth=1.5, zorder=3)
+
+        # right region: X > 1 (right-aligned to the axis end if too narrow for the text)
+        narrow_r = (hi - REF_MW) / (hi - lo) < 0.16
+        put(hi - 0.15 if narrow_r else (REF_MW + hi) / 2,
+            max(ymax * 0.3, dens(REF_MW) * 0.5),
+            f"Probability of\nMORE than one\n{noun}\nin the Milky Way\n($> 1$): {fmt_pct(p_gt)}",
+            fmt_pct(p_gt), ha="right" if narrow_r else "center")
+
+        if show_universe and lo < REF_UNIV:
+            # extra hatching and line for the observable universe
+            ax.fill_between(x, pdf, where=grid <= REF_UNIV, hatch="/", facecolor=(0, 1, 0, 0.1),
+                            edgecolor=(0, 0, 0, 0.3), linewidth=0, zorder=2)
+            ax.vlines(x=5e-13, ymin=0, ymax=dens(REF_UNIV), color="red", linestyle="dashed",
+                      linewidth=1.5, zorder=4)
+
+            # middle region: 5e-13 < X < 1 (the percentage is P(X < 1), as in the final figure)
+            put((REF_UNIV + REF_MW) / 2,
+                max(ymax * 0.2, min(dens(REF_UNIV) * 1.1, ymax * 0.8)),
+                f"Probability of\nFEWER than one\n{noun}\nin the Milky Way\n($< 1$): {fmt_pct(p_lt)}",
+                fmt_pct(p_lt))
+
+            # left region: X < 5e-13 (fewer than one in the whole observable universe)
+            narrow_l = (REF_UNIV - lo) / (hi - lo) < 0.16
+            put(lo + 0.15 if narrow_l else (lo + REF_UNIV) / 2,
+                max(ymax * 0.2, min(dens(REF_UNIV) * 0.5, ymax * 0.8)),
+                f"Probability of\nFEWER than one\n{noun}\nin the observable\nUniverse\n"
+                f"($< 5 \\times 10^{{-13}}$): {fmt_pct(p_univ)}",
+                fmt_pct(p_univ), ha="left" if narrow_l else "center")
+        else:
+            # left region: X < 1 (no universe part)
+            narrow_l = (REF_MW - lo) / (hi - lo) < 0.16
+            put(lo + 0.15 if narrow_l else (lo + REF_MW) / 2,
+                max(ymax * 0.3, dens(REF_MW) * 0.5),
+                f"Probability of\nFEWER than one\n{noun}\nin the Milky Way\n($< 1$): {fmt_pct(p_lt)}",
+                fmt_pct(p_lt), ha="left" if narrow_l else "center")
+    else:
+        # 1 is outside the axis: all the mass is on one side
+        above = lo > REF_MW
+        p = p_gt if above else p_lt
+        word, sign = ("MORE", ">") if above else ("FEWER", "<")
+        put((lo + hi) / 2, ymax * 0.35,
+            f"Probability of\n{word} than one\n{noun}\nin the Milky Way\n(${sign} 1$): {fmt_pct(p)}",
+            fmt_pct(p))
+
+    style_axis(ax, cum_formula(questions, k), "Prob. density per decade",
+               f"{CUM_MEANING[k]}\n(first {k} parameters; n = {n_sessions} participants)")
+
+
+def figure_cumulative_overlay(cum: dict, questions: list, out: Path, n_sessions: int):
+    """All the cumulative curves in one panel, to see how the distribution moves and widens."""
+    lo = min(limits_logX(v)[0] for v in cum.values())
+    hi = max(limits_logX(v)[1] for v in cum.values())
+    ks = sorted(cum)
+    colors = plt.cm.viridis(np.linspace(0.05, 0.85, len(ks)))
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    for c, k in zip(colors, ks):
+        grid, pdf = kde_curve(cum[k], lo, hi)
+        ax.plot(10.0 ** grid, pdf, color=c, linewidth=2, label=f"{k}: {cum_formula(questions, k)}")
+        ax.fill_between(10.0 ** grid, pdf, color=c, alpha=0.06)
+    ax.set_xlim(10.0 ** lo, 10.0 ** hi)
+    ax.set_ylim(bottom=0)
+    ax.axvline(1, color="green", linestyle="dashed", linewidth=1.2)
+    ax.axvline(5e-13, color="red", linestyle="dashed", linewidth=1.2)
+    style_axis(ax, "Product of the first $k$ parameters", "Prob. density per decade",
+               f"Adding one Drake parameter at a time (community, n = {n_sessions} participants)")
+    ax.legend(fontsize=8, frameon=False, loc="upper right", title="k : terms included", title_fontsize=8)
+    plt.tight_layout()
+    plt.savefig(out, bbox_inches="tight", dpi=150)
+    plt.close(fig)
 
 # ── main ──────────────────────────────────────────────────────────────────
 
@@ -391,6 +585,8 @@ def main():
     ap.add_argument("--out-dir", default="figures")
     ap.add_argument("--n-mc", type=int, default=200_000, help="Monte Carlo samples for N")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--k-min", type=int, default=3,
+                    help="smallest number of parameters in the cumulative figures")
     args = ap.parse_args()
 
     data_dir, out_dir = Path(args.data_dir), Path(args.out_dir)
@@ -470,6 +666,28 @@ def main():
     plt.tight_layout()
     plt.savefig(out_dir / "drake_survey_N.png", bbox_inches="tight", dpi=150)
     plt.close(fig)
+
+    # ── cumulative figures: first k parameters (k = k_min ... 7) ──
+    print("Cumulative figures (adding one parameter at a time)...")
+    cum = community_logN_cumulative(pools, questions, args.n_mc, args.seed, k_min=args.k_min)
+    cum_rows = []
+    for k, log_X in cum.items():
+        st = summarize_logX(log_X)
+        cum_rows.append({"k": k, "terms": "*".join(q["id"] for q in questions[:k]),
+                         "meaning": CUM_MEANING.get(k, "").replace("\n", " "),
+                         "median": st["median"], "q05": st["q05"], "q25": st["q25"],
+                         "q75": st["q75"], "q95": st["q95"], "P_gt_1_pct": st["p_gt_1"]})
+        print(f"  k={k}: median = {st['median']:.3g}, "
+              f"90% = [{st['q05']:.3g}, {st['q95']:.3g}], P(>1) = {st['p_gt_1']:.1f}%")
+        if k < len(questions):                      # k = 7 already has drake_survey_N.png
+            fig, ax = plt.subplots(figsize=(7.5, 4.8))
+            draw_partial_N(ax, log_X, k, questions, len(sessions),
+               show_universe=(k >= len(questions) - 2))
+            plt.tight_layout()
+            plt.savefig(out_dir / f"drake_survey_N_first{k}.png", bbox_inches="tight", dpi=150)
+            plt.close(fig)
+    figure_cumulative_overlay(cum, questions, out_dir / "drake_survey_cumulative.png", len(sessions))
+    pd.DataFrame(cum_rows).to_csv(data_dir / "drake_survey_cumulative_summary.csv", index=False)
 
     # ── numbers to the terminal and to a CSV ──
     pd.DataFrame(summary).to_csv("data/drake_survey_param_summary.csv", index=False)
