@@ -1,0 +1,16 @@
+﻿session_id,area_grande,area_especifica,intel_galaxy,intel_universe,life_galaxy,life_solar,life_universe
+551acdd5-03ed-493c-87e5-e2a26960401b,Ciências Exatas e da Terra,Astronomia,very_unlikely,likely,likely,unlikely,very_likely
+34002417-19ca-42af-8664-cddc29bf93b5,Ciências Biológicas,Biologia Geral,likely,very_likely,very_likely,likely,very_likely
+c3333738-169d-47bc-99a5-b9b954b8f526,Ciências Humanas,Educação,likely,very_likely,very_likely,likely,very_likely
+4668de6c-f44d-472b-9e9f-a221183a2dac,Outra / Multidisciplinar,,unlikely,likely,likely,unsure,very_likely
+a888bcb0-0b30-4425-b84f-9c1a6548535c,"Linguística, Letras e Artes",Artes,unsure,very_likely,very_likely,likely,likely
+c9c89a3b-2b09-4156-b382-36f649685055,Ciências Sociais Aplicadas,Ciência da Informação,unsure,likely,very_likely,very_likely,unsure
+bf0f1f9d-c969-414c-8c38-cab4b7b44fbe,Outra / Multidisciplinar,,unsure,likely,very_likely,very_likely,very_likely
+810a77e0-8ccd-401d-b5ef-1aabee5fc4f2,Engenharias,Engenharia Elétrica,unsure,likely,likely,likely,very_likely
+988e5afb-cf6c-4e66-9cbb-6ccbe08e2df9,Ciências Exatas e da Terra,Física,unsure,unsure,very_likely,unlikely,very_likely
+003604f2-094d-4d84-9845-9f0f4476ffc2,Ciências Exatas e da Terra,Ciência da Computação,very_unlikely,very_unlikely,very_unlikely,very_unlikely,very_unlikely
+7ed23a78-c838-4bc1-8acc-87ae3748d74c,Ciências Exatas e da Terra,,unsure,very_unlikely,likely,likely,very_likely
+d10d69da-23e5-4d02-947c-43bc2b889635,"Linguística, Letras e Artes",Letras,likely,likely,very_likely,very_likely,very_likely
+2fae1b24-3e08-4fbf-9d26-5487e08df6e3,Outra / Multidisciplinar,,unsure,likely,very_likely,very_unlikely,very_likely
+cb07007a-0b0c-423f-8b31-79291effc9af,Ciências Exatas e da Terra,Matemática,unsure,unsure,likely,likely,very_likely
+35d2e871-9cba-40e7-9f74-ff3f259e8cd6,Ciências Humanas,Ciência Política,likely,very_likely,likely,likely,very_likely

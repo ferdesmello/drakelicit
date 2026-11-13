@@ -156,7 +156,10 @@ def sample_split_normal_truncated(t_mode: float, t_lo: float, t_hi: float,
     total   = mass_L + mass_R
     if total <= 0:
         return np.full(n, t_mode)    # fully degenerate: return the mode
-    p_left  = mass_L / total
+
+    wL = sig_L * mass_L
+    wR = sig_R * mass_R
+    p_left = wL / (wL + wR)
 
     # Assign each sample to left or right half
     left = rng.uniform(size=n) < p_left
